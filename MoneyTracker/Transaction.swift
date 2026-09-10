@@ -20,11 +20,14 @@ final class Transaction {
     var date: Date = Date()
     var type: TransactioType = TransactioType.expense
     var note: String = ""
+    var category: Category? = nil
     
-    init(amount: Decimal, date: Date, type: TransactioType, note: String) {
+    
+    init(amount: Decimal, date: Date, type: TransactioType, note: String, category: Category? = nil) {
         self.amount = amount
         self.date = date
         self.type = type
         self.note = note
+        self.category = category
     }
 }

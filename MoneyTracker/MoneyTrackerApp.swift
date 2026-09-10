@@ -14,6 +14,7 @@ struct MoneyTrackerApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Transaction.self,
+            Category.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -34,6 +35,10 @@ struct MoneyTrackerApp: App {
                         ContentView()
                     .tabItem {
                         Label("Transakcije", systemImage: "list.bullet")
+                    }
+                CategoriesView()
+                    .tabItem {
+                        Label("Kategorije", systemImage: "folder")
                     }
             }
         }
