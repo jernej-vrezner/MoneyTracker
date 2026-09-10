@@ -8,6 +8,7 @@
 import SwiftUI
 import SwiftData
 
+
 @main
 struct MoneyTrackerApp: App {
     var sharedModelContainer: ModelContainer = {
@@ -25,7 +26,16 @@ struct MoneyTrackerApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            TabView {
+                DashboardView()
+                    .tabItem {
+                        Label("Pregled", systemImage: "chart.bar")
+                    }
+                        ContentView()
+                    .tabItem {
+                        Label("Transakcije", systemImage: "list.bullet")
+                    }
+            }
         }
         .modelContainer(sharedModelContainer)
     }
