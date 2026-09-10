@@ -8,18 +8,20 @@
 import SwiftUI
 import SwiftData
 
+
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
-
+    @Query private var transactions: [Transaction]
+    @State private var showingAddView = false
+    
     var body: some View {
         NavigationViewWrapper {
             List {
-                ForEach(items) { item in
+                ForEach(transactions) { transaction in
                     NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
+                        Text("\(transaction.amount.formatted(.currency(code: "EUR"))) – \(transaction.type.rawValue)")
                     } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+                        Text(transaction.date, format: Date.FormatStyle(date: .numeric, time: .standard))
                     }
                 }
                 .onDelete(perform: deleteItems)
@@ -34,25 +36,23 @@ struct ContentView: View {
                 }
 #endif
                 ToolbarItem {
-                    Button(action: addItem) {
+                    Button {
+                        showingAddView = true
+                    } label: {
                         Label("Add Item", systemImage: "plus")
                     }
                 }
             }
-        }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
+            .sheet(isPresented: $showingAddView) {
+                AddTransactionView()
+            }
         }
     }
 
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
-                modelContext.delete(items[index])
+                modelContext.delete(transactions[index])
             }
         }
     }
@@ -74,10 +74,12 @@ fileprivate struct NavigationViewWrapper<Content: View>: View {
         }
         
 #endif
+        
     }
+    
 }
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+        .modelContainer(for: Transaction.self, inMemory: true)
 }
