@@ -14,8 +14,10 @@ struct AddTransactionView: View {
     @State var date:Date = Date()
     @State var type:TransactioType = .expense
     @State var note:String = ""
+    @State var selectedCategory: Category? = nil
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Query private var categories: [Category]
     
     var body: some View {
         Form {
@@ -33,9 +35,17 @@ struct AddTransactionView: View {
             Section(header: Text("Note")) {
                 TextEditor(text: $note)
             }
+            Section(header: Text("Kategorija")) {
+                Picker("Kategorija", selection: $selectedCategory) {
+                    Text("Brez kategorije").tag(nil as Category?)
+                    ForEach(categories) { category in
+                        Text(category.name).tag(category as Category?)
+                    }
+                }
+            }
             Section {
                 Button("Shrani") {
-                    let newTransaction = Transaction(amount: amount, date: date, type: type, note: note)
+                    let newTransaction = Transaction(amount: amount, date: date, type: type, note: note, category: selectedCategory)
                     modelContext.insert(newTransaction)
                     dismiss()
                 }
