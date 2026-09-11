@@ -50,6 +50,10 @@ struct MoneyTrackerApp: App {
                     .tabItem {
                         Label("Naročnine", systemImage: "creditcard")
                     }
+                CalendarView()
+                    .tabItem {
+                        Label("Kalendar", systemImage: "calendar")
+                    }
             }
         }
         .modelContainer(sharedModelContainer)
