@@ -16,6 +16,7 @@ struct MoneyTrackerApp: App {
             Transaction.self,
             Category.self,
             Goal.self,
+            Subscription.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -44,6 +45,10 @@ struct MoneyTrackerApp: App {
                 GoalsView()
                     .tabItem {
                         Label("Cilji", systemImage: "target")
+                    }
+                SubscriptionsView()
+                    .tabItem {
+                        Label("Naročnine", systemImage: "creditcard")
                     }
             }
         }
