@@ -18,10 +18,19 @@ struct ContentView: View {
         NavigationViewWrapper {
             List {
                 ForEach(transactions) { transaction in
-                    NavigationLink {
-                        Text("\(transaction.amount.formatted(.currency(code: "EUR"))) – \(transaction.type.rawValue)")
-                    } label: {
-                        Text(transaction.date, format: Date.FormatStyle(date: .numeric, time: .standard))
+                    VStack(alignment: .leading) {
+                        HStack {
+                            Text(transaction.category?.name ?? "Brez kategorije")
+                            Spacer()
+                            Text(transaction.amount.formatted(.currency(code: "EUR")))
+                        }
+                        Text("\(transaction.type.rawValue) • \(transaction.date.formatted(date: .abbreviated, time: .omitted))")
+                            .font(.caption)
+                        if !transaction.note.isEmpty {
+                            Text(transaction.note)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
                 .onDelete(perform: deleteItems)
