@@ -29,23 +29,27 @@ struct CalendarView: View {
         transactions.contains { Calendar.current.isDate($0.date, inSameDayAs: day) }
     }
     var body: some View {
-        VStack{
+        VStack {
             HStack {
                 Button {
                     displayedMonth = Calendar.current.date(byAdding: .month, value: -1, to: displayedMonth)!
                 } label: {
                     Image(systemName: "chevron.left")
                 }
+                .foregroundStyle(Color("textPrimary"))
                 Spacer()
                 Text(displayedMonth.formatted(.dateTime.month(.wide).year()))
+                    .foregroundStyle(Color("textPrimary"))
                 Spacer()
                 Button {
                     displayedMonth = Calendar.current.date(byAdding: .month, value: 1, to: displayedMonth)!
                 } label: {
                     Image(systemName: "chevron.right")
                 }
+                .foregroundStyle(Color("textPrimary"))
             }
             .padding(.horizontal)
+
             LazyVGrid(columns: Array(repeating: GridItem(), count: 7)) {
                 ForEach(daysInMonth, id: \.self) { day in
                     Button {
@@ -53,16 +57,36 @@ struct CalendarView: View {
                     } label: {
                         VStack(spacing: 2) {
                             Text("\(Calendar.current.component(.day, from: day))")
+                                .foregroundStyle(Color("textPrimary"))
                             Circle()
-                                .fill(hasTransactions(on: day) ? Color.blue : Color.clear)
+                                .fill(hasTransactions(on: day) ? Color.accentColor : Color.clear)
                                 .frame(width: 4, height: 4)
                         }
                     }
                 }
             }
+            .cardStyle()
+
             List(transactionsForSelectedDate) { transaction in
-                Text("\(transaction.category?.name ?? "Brez kategorije") – \(transaction.amount.formatted(.currency(code: "EUR")))")
+                HStack {
+                    Text(transaction.category?.name ?? "Brez kategorije")
+                        .foregroundStyle(Color("textPrimary"))
+                    Spacer()
+                    Text(transaction.amount.formatted(.currency(code: "EUR")))
+                        .font(.system(.body, design: .monospaced))
+                        .foregroundStyle(transaction.type == .income ? Color("positiveColor") : Color("negativeColor"))
+                }
+                .listRowBackground(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color("cardBackground"))
+                        .padding(.vertical, 4)
+                )
+                .listRowSeparator(.hidden)
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
         }
+        .padding(.top)
+        .background(Color("appBackground"))
     }
 }

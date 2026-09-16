@@ -57,56 +57,70 @@ struct DashboardView: View {
         Array(transactions.sorted {$0.date > $1.date}.prefix(5))
     }
     var body: some View {
-        VStack(alignment: .leading) {
-            VStack(alignment: .leading) {
-                Text("Prilivi: \(totalIncome.formatted(.currency(code: "EUR")))")
-                Text("Odlivi: \(totalExpense.formatted(.currency(code: "EUR")))")
-                Text("Investicije: \(totalInvestment.formatted(.currency(code: "EUR")))")
-                Text("Neto: \(net.formatted(.currency(code: "EUR")))")
-            }
-            Chart(categories) { category in
-                BarMark(
-                    x: .value("Kategorija", category.name),
-                    y: .value("Znesek", Double(truncating: spent(for: category) as NSNumber))
-                )
-            }
-            .frame(height: 200)
-            
-            Chart(lastSixMonths) { item in
-                BarMark(
-                    x: .value("Mesec", item.month, unit: .month),
-                    y: .value("Znesek", Double(truncating: item.income as NSNumber))
-                )
-                .foregroundStyle(by: .value("Tip", "Prilivi"))
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Prilivi: \(totalIncome.formatted(.currency(code: "EUR")))")
+                    Text("Odlivi: \(totalExpense.formatted(.currency(code: "EUR")))")
+                    Text("Investicije: \(totalInvestment.formatted(.currency(code: "EUR")))")
+                    Text("Neto: \(net.formatted(.currency(code: "EUR")))")
+                }
+                .font(.system(.body, design: .monospaced))
+                .foregroundStyle(Color("textPrimary"))
+                .cardStyle()
 
-                BarMark(
-                    x: .value("Mesec", item.month, unit: .month),
-                    y: .value("Znesek", Double(truncating: item.expense as NSNumber))
-                )
-                .foregroundStyle(by: .value("Tip", "Odlivi"))
-            }
-            .frame(height: 200)
-            Text("Projekcija do konca meseca: \(projectedExpense.formatted(.currency(code: "EUR")))")
-            
-            VStack(alignment: .leading) {
-                Text("Zadnje transakcije").font(.headline)
-                ForEach(recentTransactions) { transaction in
-                    VStack(alignment: .leading) {
-                        HStack {
-                            Text(transaction.category?.name ?? "Brez kategorije")
-                            Spacer()
-                            Text(transaction.amount.formatted(.currency(code: "EUR")))
+                Chart(categories) { category in
+                    BarMark(
+                        x: .value("Kategorija", category.name),
+                        y: .value("Znesek", Double(truncating: spent(for: category) as NSNumber))
+                    )
+                    .foregroundStyle(Color.accentColor)
+                }
+                .frame(height: 200)
+                .cardStyle()
+
+                Chart(lastSixMonths) { item in
+                    BarMark(
+                        x: .value("Mesec", item.month, unit: .month),
+                        y: .value("Znesek", Double(truncating: item.income as NSNumber))
+                    )
+                    .foregroundStyle(Color("positiveColor"))
+
+                    BarMark(
+                        x: .value("Mesec", item.month, unit: .month),
+                        y: .value("Znesek", Double(truncating: item.expense as NSNumber))
+                    )
+                    .foregroundStyle(Color("negativeColor"))
+                }
+                .frame(height: 200)
+                .cardStyle()
+
+                Text("Projekcija do konca meseca: \(projectedExpense.formatted(.currency(code: "EUR")))")
+                    .font(.system(.body, design: .monospaced))
+                    .cardStyle()
+
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Zadnje transakcije").font(.headline)
+                    ForEach(recentTransactions) { transaction in
+                        VStack(alignment: .leading) {
+                            HStack {
+                                Text(transaction.category?.name ?? "Brez kategorije")
+                                Spacer()
+                                Text(transaction.amount.formatted(.currency(code: "EUR")))
+                                    .font(.system(.body, design: .monospaced))
+                                    .foregroundStyle(transaction.type == .income ? Color("positiveColor") : Color("negativeColor"))
+                            }
+                            Text("\(transaction.type.rawValue) • \(transaction.date.formatted(date: .abbreviated, time: .omitted))")
+                                .font(.caption)
+                                .foregroundStyle(Color("textSecondary"))
                         }
-                        Text("\(transaction.type.rawValue) • \(transaction.date.formatted(date: .abbreviated, time: .omitted))")
-                            .font(.caption)
                     }
                 }
+                .cardStyle()
             }
+            .padding()
         }
-        .onAppear {
-            chargeSubscriptionsIfNeeded()
-        }
-       
+        .background(Color("appBackground"))
     }
     private func spent(for category: Category) -> Decimal {
         transactionsThisMonth

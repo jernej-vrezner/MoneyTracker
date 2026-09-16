@@ -22,15 +22,29 @@ struct SubscriptionsView: View {
                     HStack {
                         VStack(alignment: .leading) {
                             Text(subscription.name)
+                                .foregroundStyle(Color("textPrimary"))
                             Text("Dan obračuna: \(subscription.billingDay)")
                                 .font(.caption)
+                                .foregroundStyle(Color("textSecondary"))
                         }
                         Spacer()
                         Text(subscription.amount.formatted(.currency(code: "EUR")))
+                            .font(.system(.body, design: .monospaced))
+                            .foregroundStyle(Color("negativeColor"))
                     }
+                    .padding(.vertical, 4)
+                    .listRowBackground(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color("cardBackground"))
+                            .padding(.vertical, 4)
+                    )
+                    .listRowSeparator(.hidden)
                 }
                 .onDelete(perform: deleteSubscriptions)
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(Color("appBackground"))
             .toolbar {
                 ToolbarItem {
                     Button {
