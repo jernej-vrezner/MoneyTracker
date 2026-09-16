@@ -18,20 +18,35 @@ struct GoalsView: View {
         NavigationStack {
             List {
                 ForEach(goals) { goal in
-                    VStack(alignment: .leading) {
+                    VStack(alignment: .leading, spacing: 6) {
                         Text(goal.name)
+                            .foregroundStyle(Color("textPrimary"))
                         ProgressView(
                             value: min(Double(truncating: goal.savedAmount as NSNumber), Double(truncating: goal.targetAmount as NSNumber)),
                             total: Double(truncating: goal.targetAmount as NSNumber)
                         )
+                        .tint(Color.accentColor)
                         Text("\(goal.savedAmount.formatted(.currency(code: "EUR"))) od \(goal.targetAmount.formatted(.currency(code: "EUR")))")
+                            .font(.system(.caption, design: .monospaced))
+                            .foregroundStyle(Color("textSecondary"))
                         Button("Dodaj prispevek") {
                             goalForContribution = goal
                         }
+                        .foregroundStyle(Color.accentColor)
                     }
+                    .padding(.vertical, 4)
+                    .listRowBackground(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color("cardBackground"))
+                            .padding(.vertical, 4)
+                    )
+                    .listRowSeparator(.hidden)
                 }
                 .onDelete(perform: deleteGoals)
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(Color("appBackground"))
             .toolbar {
                 ToolbarItem {
                     Button {

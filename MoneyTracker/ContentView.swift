@@ -18,32 +18,46 @@ struct ContentView: View {
         NavigationViewWrapper {
             List {
                 ForEach(transactions) { transaction in
-                    VStack(alignment: .leading) {
+                    VStack(alignment: .leading, spacing: 4) {
                         HStack {
                             Text(transaction.category?.name ?? "Brez kategorije")
+                                .foregroundStyle(Color("textPrimary"))
                             Spacer()
                             Text(transaction.amount.formatted(.currency(code: "EUR")))
+                                .font(.system(.body, design: .monospaced))
+                                .foregroundStyle(transaction.type == .income ? Color("positiveColor") : Color("negativeColor"))
                         }
                         Text("\(transaction.type.rawValue) • \(transaction.date.formatted(date: .abbreviated, time: .omitted))")
                             .font(.caption)
+                            .foregroundStyle(Color("textSecondary"))
                         if !transaction.note.isEmpty {
                             Text(transaction.note)
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color("textSecondary"))
                         }
                     }
+                    .padding(.vertical, 4)
+                    .listRowBackground(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color("cardBackground"))
+                            .padding(.vertical, 4)
+                    )
+                    .listRowSeparator(.hidden)
                 }
                 .onDelete(perform: deleteItems)
             }
-#if os(macOS)
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(Color("appBackground"))
+    #if os(macOS)
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
-#endif
+    #endif
             .toolbar {
-#if os(iOS)
+    #if os(iOS)
                 ToolbarItem(placement: .navigationBarTrailing) {
                     EditButton()
                 }
-#endif
+    #endif
                 ToolbarItem {
                     Button {
                         showingAddView = true

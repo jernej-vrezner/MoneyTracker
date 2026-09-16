@@ -18,24 +18,37 @@ struct CategoriesView: View {
         NavigationStack {
             List {
                 ForEach(categories) { category in
-                    VStack(alignment: .leading){
+                    VStack(alignment: .leading) {
                         HStack {
                             Circle()
                                 .fill(category.color.color)
                                 .frame(width: 12, height: 12)
                             Text(category.name)
+                                .foregroundStyle(Color("textPrimary"))
                             Spacer()
                             Text(category.monthlyLimit.formatted(.currency(code: "EUR")))
+                                .font(.system(.body, design: .monospaced))
+                                .foregroundStyle(Color("textSecondary"))
                         }
                         ProgressView(
-                            value: Double(truncating: spent(for: category) as NSNumber),
+                            value: min(Double(truncating: spent(for: category) as NSNumber), Double(truncating: category.monthlyLimit as NSNumber)),
                             total: Double(truncating: category.monthlyLimit as NSNumber)
                         )
-                        .tint(spent(for: category) > category.monthlyLimit ? .red : .blue)
+                        .tint(spent(for: category) > category.monthlyLimit ? Color("negativeColor") : Color.accentColor)
                     }
+                    .padding(.vertical, 4)
+                    .listRowBackground(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color("cardBackground"))
+                            .padding(.vertical, 4)
+                    )
+                    .listRowSeparator(.hidden)
                 }
                 .onDelete(perform: deleteCategories)
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(Color("appBackground"))
             .toolbar {
                 ToolbarItem {
                     Button {
