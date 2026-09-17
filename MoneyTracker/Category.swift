@@ -18,12 +18,14 @@ final class Category {
     var name: String = ""
     var color: CategoryColor = CategoryColor.red
     var monthlyLimit: Decimal = 0
+    var icon: String = "tag.fill"
     
     
-    init(name: String, color: CategoryColor, monthlyLimit: Decimal) {
+    init(name: String, color: CategoryColor, monthlyLimit: Decimal,icon:String) {
         self.name = name
         self.color = color
         self.monthlyLimit = monthlyLimit
+        self.icon = icon
     }
 }
 extension CategoryColor {

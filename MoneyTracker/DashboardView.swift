@@ -57,71 +57,111 @@ struct DashboardView: View {
         Array(transactions.sorted {$0.date > $1.date}.prefix(5))
     }
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Prilivi: \(totalIncome.formatted(.currency(code: "EUR")))")
-                    Text("Odlivi: \(totalExpense.formatted(.currency(code: "EUR")))")
-                    Text("Investicije: \(totalInvestment.formatted(.currency(code: "EUR")))")
-                    Text("Neto: \(net.formatted(.currency(code: "EUR")))")
-                }
-                .font(.system(.body, design: .monospaced))
-                .foregroundStyle(Color("textPrimary"))
-                .cardStyle()
-
-                Chart(categories) { category in
-                    BarMark(
-                        x: .value("Kategorija", category.name),
-                        y: .value("Znesek", Double(truncating: spent(for: category) as NSNumber))
-                    )
-                    .foregroundStyle(Color.accentColor)
-                }
-                .frame(height: 200)
-                .cardStyle()
-
-                Chart(lastSixMonths) { item in
-                    BarMark(
-                        x: .value("Mesec", item.month, unit: .month),
-                        y: .value("Znesek", Double(truncating: item.income as NSNumber))
-                    )
-                    .foregroundStyle(Color("positiveColor"))
-
-                    BarMark(
-                        x: .value("Mesec", item.month, unit: .month),
-                        y: .value("Znesek", Double(truncating: item.expense as NSNumber))
-                    )
-                    .foregroundStyle(Color("negativeColor"))
-                }
-                .frame(height: 200)
-                .cardStyle()
-
-                Text("Projekcija do konca meseca: \(projectedExpense.formatted(.currency(code: "EUR")))")
-                    .font(.system(.body, design: .monospaced))
-                    .cardStyle()
-
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Zadnje transakcije").font(.headline)
-                    ForEach(recentTransactions) { transaction in
-                        VStack(alignment: .leading) {
-                            HStack {
-                                Text(transaction.category?.name ?? "Brez kategorije")
-                                Spacer()
-                                Text(transaction.amount.formatted(.currency(code: "EUR")))
-                                    .font(.system(.body, design: .monospaced))
-                                    .foregroundStyle(transaction.type == .income ? Color("positiveColor") : Color("negativeColor"))
-                            }
-                            Text("\(transaction.type.rawValue) • \(transaction.date.formatted(date: .abbreviated, time: .omitted))")
-                                .font(.caption)
-                                .foregroundStyle(Color("textSecondary"))
-                        }
+        
+        VStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(Date().formatted(.dateTime.month(.wide).year()))
+                    .font(.system(.caption, design: .monospaced))
+                    .textCase(.uppercase)
+                    .foregroundStyle(Color("textSecondary"))
+                HStack {
+                    Text("Pregled")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundStyle(Color("textPrimary"))
+                    Spacer()
+                    HStack(spacing: 8) {
+                        Image(systemName: "moon.fill")
+                            .frame(width: 32, height: 32)
+                            .background(Color("cardBackground"))
+                            .clipShape(Circle())
+                        Text("SI")
+                            .font(.caption)
+                            .padding(8)
+                            .background(Color("cardBackground"))
+                            .clipShape(Capsule())
+                        Text("Uredi")
+                            .font(.subheadline.weight(.medium))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color.accentColor.opacity(0.15))
+                            .foregroundStyle(Color.accentColor)
+                            .clipShape(Capsule())
                     }
                 }
-                .cardStyle()
             }
             .padding()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Prilivi: \(totalIncome.formatted(.currency(code: "EUR")))")
+                        Text("Odlivi: \(totalExpense.formatted(.currency(code: "EUR")))")
+                        Text("Investicije: \(totalInvestment.formatted(.currency(code: "EUR")))")
+                        Text("Neto: \(net.formatted(.currency(code: "EUR")))")
+                    }
+                    .font(.system(.body, design: .monospaced))
+                    .foregroundStyle(Color("textPrimary"))
+                    .cardStyle()
+                    
+                    Chart(categories) { category in
+                        BarMark(
+                            x: .value("Kategorija", category.name),
+                            y: .value("Znesek", Double(truncating: spent(for: category) as NSNumber))
+                        )
+                        .foregroundStyle(Color.accentColor)
+                    }
+                    .frame(height: 200)
+                    .cardStyle()
+                    
+                    Chart(lastSixMonths) { item in
+                        BarMark(
+                            x: .value("Mesec", item.month, unit: .month),
+                            y: .value("Znesek", Double(truncating: item.income as NSNumber))
+                        )
+                        .foregroundStyle(Color("positiveColor"))
+                        
+                        BarMark(
+                            x: .value("Mesec", item.month, unit: .month),
+                            y: .value("Znesek", Double(truncating: item.expense as NSNumber))
+                        )
+                        .foregroundStyle(Color("negativeColor"))
+                    }
+                    .frame(height: 200)
+                    .cardStyle()
+                    
+                    Text("Projekcija do konca meseca: \(projectedExpense.formatted(.currency(code: "EUR")))")
+                        .font(.system(.body, design: .monospaced))
+                        .cardStyle()
+                    
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Zadnje transakcije").font(.headline)
+                        ForEach(recentTransactions) { transaction in
+                            VStack(alignment: .leading) {
+                                HStack {
+                                    CategoryIconBadge(
+                                        icon: transaction.category?.icon ?? "questionmark.circle",
+                                        color: transaction.category?.color.color ?? Color("textSecondary")
+                                    )
+                                    Text(transaction.category?.name ?? "Brez kategorije")
+                                    Spacer()
+                                    Text(transaction.amount.formatted(.currency(code: "EUR")))
+                                        .font(.system(.body, design: .monospaced))
+                                        .foregroundStyle(transaction.type == .income ? Color("positiveColor") : Color("negativeColor"))
+                                }
+                                Text("\(transaction.type.rawValue) • \(transaction.date.formatted(date: .abbreviated, time: .omitted))")
+                                    .font(.caption)
+                                    .foregroundStyle(Color("textSecondary"))
+                            }
+                        }
+                    }
+                    .cardStyle()
+                }
+                .padding()
+            }
+            .background(Color("appBackground"))
         }
-        .background(Color("appBackground"))
     }
+
     private func spent(for category: Category) -> Decimal {
         transactionsThisMonth
             .filter { $0.category == category && $0.type == .expense }

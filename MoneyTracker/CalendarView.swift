@@ -28,6 +28,22 @@ struct CalendarView: View {
     private func hasTransactions(on day: Date) -> Bool {
         transactions.contains { Calendar.current.isDate($0.date, inSameDayAs: day) }
     }
+    var transactionsInDisplayedMonth: [Transaction] {
+        transactions.filter { Calendar.current.isDate($0.date, equalTo: displayedMonth, toGranularity: .month) }
+    }
+
+    var monthIncome: Decimal {
+        transactionsInDisplayedMonth.filter { $0.type == .income }.reduce(0) { $0 + $1.amount }
+    }
+
+    var monthExpense: Decimal {
+        transactionsInDisplayedMonth.filter { $0.type == .expense }.reduce(0) { $0 + $1.amount }
+    }
+
+    var monthNet: Decimal {
+        monthIncome - monthExpense
+    }
+    
     var body: some View {
         VStack {
             HStack {
@@ -49,7 +65,41 @@ struct CalendarView: View {
                 .foregroundStyle(Color("textPrimary"))
             }
             .padding(.horizontal)
+            HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("PRILIVI")
+                        .font(.system(.caption2, design: .monospaced))
+                        .foregroundStyle(Color("textSecondary"))
+                    Text(monthIncome.formatted(.currency(code: "EUR")))
+                        .font(.system(.subheadline, design: .monospaced).weight(.semibold))
+                        .foregroundStyle(Color("positiveColor"))
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .cardStyle()
 
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("ODLIVI")
+                        .font(.system(.caption2, design: .monospaced))
+                        .foregroundStyle(Color("textSecondary"))
+                    Text(monthExpense.formatted(.currency(code: "EUR")))
+                        .font(.system(.subheadline, design: .monospaced).weight(.semibold))
+                        .foregroundStyle(Color("negativeColor"))
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .cardStyle()
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("NETO")
+                        .font(.system(.caption2, design: .monospaced))
+                        .foregroundStyle(Color("textSecondary"))
+                    Text(monthNet.formatted(.currency(code: "EUR")))
+                        .font(.system(.subheadline, design: .monospaced).weight(.semibold))
+                        .foregroundStyle(Color("textPrimary"))
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .cardStyle()
+            }
+            .padding(.horizontal)
             LazyVGrid(columns: Array(repeating: GridItem(), count: 7)) {
                 ForEach(daysInMonth, id: \.self) { day in
                     Button {
@@ -69,6 +119,10 @@ struct CalendarView: View {
 
             List(transactionsForSelectedDate) { transaction in
                 HStack {
+                    CategoryIconBadge(
+                        icon: transaction.category?.icon ?? "questionmark.circle",
+                        color: transaction.category?.color.color ?? Color("textSecondary")
+                    )
                     Text(transaction.category?.name ?? "Brez kategorije")
                         .foregroundStyle(Color("textPrimary"))
                     Spacer()

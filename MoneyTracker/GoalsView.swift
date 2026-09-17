@@ -21,9 +21,9 @@ struct GoalsView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(goal.name)
                             .foregroundStyle(Color("textPrimary"))
-                        ProgressView(
-                            value: min(Double(truncating: goal.savedAmount as NSNumber), Double(truncating: goal.targetAmount as NSNumber)),
-                            total: Double(truncating: goal.targetAmount as NSNumber)
+                        CategoryProgressBar(
+                            progress: Double(truncating: goal.savedAmount as NSNumber) / Double(truncating: goal.targetAmount as NSNumber),
+                            color: Color.accentColor
                         )
                         .tint(Color.accentColor)
                         Text("\(goal.savedAmount.formatted(.currency(code: "EUR"))) od \(goal.targetAmount.formatted(.currency(code: "EUR")))")
@@ -32,6 +32,7 @@ struct GoalsView: View {
                         Button("Dodaj prispevek") {
                             goalForContribution = goal
                         }
+                        .pillStyle()
                         .foregroundStyle(Color.accentColor)
                     }
                     .padding(.vertical, 4)
