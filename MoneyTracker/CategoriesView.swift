@@ -20,9 +20,7 @@ struct CategoriesView: View {
                 ForEach(categories) { category in
                     VStack(alignment: .leading) {
                         HStack {
-                            Circle()
-                                .fill(category.color.color)
-                                .frame(width: 12, height: 12)
+                            CategoryIconBadge(icon: category.icon, color: category.color.color)
                             Text(category.name)
                                 .foregroundStyle(Color("textPrimary"))
                             Spacer()
@@ -30,9 +28,9 @@ struct CategoriesView: View {
                                 .font(.system(.body, design: .monospaced))
                                 .foregroundStyle(Color("textSecondary"))
                         }
-                        ProgressView(
-                            value: min(Double(truncating: spent(for: category) as NSNumber), Double(truncating: category.monthlyLimit as NSNumber)),
-                            total: Double(truncating: category.monthlyLimit as NSNumber)
+                        CategoryProgressBar(
+                            progress: Double(truncating: spent(for: category) as NSNumber) / Double(truncating: category.monthlyLimit as NSNumber),
+                            color: spent(for: category) > category.monthlyLimit ? Color("negativeColor") : category.color.color
                         )
                         .tint(spent(for: category) > category.monthlyLimit ? Color("negativeColor") : Color.accentColor)
                     }

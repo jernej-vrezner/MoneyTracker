@@ -21,3 +21,20 @@ extension View {
         modifier(CardStyle())
     }
 }
+
+struct PillStyle: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(Color.accentColor)
+            .foregroundStyle(.white)
+            .clipShape(Capsule())
+    }
+}
+
+extension View {
+    func pillStyle() -> some View {
+        modifier(PillStyle())
+    }
+}
