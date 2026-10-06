@@ -15,6 +15,11 @@ struct CategoriesView: View {
     @State private var categoryToEdit: Category? = nil
     @State private var expandedCategories: Set<PersistentIdentifier> = []
     @Query private var transactions: [Transaction]
+    @Query private var subscriptions: [Subscription]
+
+    private var subscriptionsMonthlyTotal: Decimal {
+        subscriptions.reduce(Decimal(0)) { $0 + $1.amount }
+    }
     
     
     var body: some View {
@@ -120,6 +125,32 @@ struct CategoriesView: View {
                         .padding(.vertical, 4)
                 )
                 .listRowSeparator(.hidden)
+
+                NavigationLink {
+                    SubscriptionsView()
+                } label: {
+                    HStack {
+                        Image(systemName: "creditcard")
+                            .foregroundStyle(Color.accentColor)
+                            .frame(width: 32, height: 32)
+                            .background(Color.accentColor.opacity(0.15))
+                            .clipShape(Circle())
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Naročnine")
+                                .foregroundStyle(Color("textPrimary"))
+                            Text("\(subscriptions.count) · \(subscriptionsMonthlyTotal.formatted(.currency(code: "EUR"))) / mesec")
+                                .font(.caption)
+                                .foregroundStyle(Color("textSecondary"))
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+                .listRowBackground(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color("cardBackground"))
+                        .padding(.vertical, 4)
+                )
+                .listRowSeparator(.hidden)
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
@@ -131,6 +162,22 @@ struct CategoriesView: View {
             .sheet(item: $categoryToEdit) { category in
                 EditCategoryView(category: category)
             }
+#if DEBUG
+            .toolbar {
+                ToolbarItem {
+                    Menu {
+                        Button("Dodaj testne podatke") {
+                            TestData.seed(in: modelContext, categories: categories)
+                        }
+                        Button("Izbriši VSE transakcije", role: .destructive) {
+                            try? modelContext.delete(model: Transaction.self)
+                        }
+                    } label: {
+                        Image(systemName: "wrench.and.screwdriver")
+                    }
+                }
+            }
+#endif
         }
     }
 

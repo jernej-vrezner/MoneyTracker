@@ -14,6 +14,12 @@ struct ContentView: View {
     @Query private var categories: [Category]
     @State private var showingAddView = false
     @State private var selectedFilterCategory: Category? = nil
+    @State private var viewMode: ViewMode = .list
+
+    enum ViewMode: String, CaseIterable {
+        case list = "Seznam"
+        case calendar = "Koledar"
+    }
 
     enum TransactionGroup: String, CaseIterable {
         case today = "Danes"
@@ -55,38 +61,18 @@ struct ContentView: View {
     var body: some View {
         NavigationViewWrapper {
             VStack(spacing: 0) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(Date().formatted(.dateTime.month(.wide).year()))
-                        .font(.system(.caption, design: .monospaced))
-                        .textCase(.uppercase)
-                        .foregroundStyle(Color("textSecondary"))
-                    HStack {
-                        Text("Transakcije")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                            .foregroundStyle(Color("textPrimary"))
-                        Spacer()
-                        HStack(spacing: 8) {
-                            Image(systemName: "moon.fill")
-                                .frame(width: 32, height: 32)
-                                .background(Color("cardBackground"))
-                                .clipShape(Circle())
-                            Text("SI")
-                                .font(.caption)
-                                .padding(8)
-                                .background(Color("cardBackground"))
-                                .clipShape(Capsule())
-                            Text("Uredi")
-                                .font(.subheadline.weight(.medium))
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background(Color.accentColor.opacity(0.15))
-                                .foregroundStyle(Color.accentColor)
-                                .clipShape(Capsule())
-                        }
+                ScreenHeader(title: "Transakcije")
+
+                Picker("Prikaz", selection: $viewMode) {
+                    ForEach(ViewMode.allCases, id: \.self) { mode in
+                        Text(mode.rawValue).tag(mode)
                     }
                 }
-                .padding()
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
+                .padding(.bottom, 8)
+
+                if viewMode == .list {
 
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
@@ -166,6 +152,9 @@ struct ContentView: View {
                 }
                 .listStyle(.plain)
                 .scrollContentBackground(.hidden)
+                } else {
+                    CalendarView()
+                }
             }
             .background(Color("appBackground"))
 #if os(macOS)

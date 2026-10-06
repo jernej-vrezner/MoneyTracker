@@ -42,6 +42,10 @@ struct MoneyTrackerApp: App {
                         .tabItem {
                             Label("Transakcije", systemImage: "list.bullet")
                         }
+                    StatisticsView()
+                        .tabItem {
+                            Label("Statistika", systemImage: "chart.pie")
+                        }
                     CategoriesView()
                         .tabItem {
                             Label("Kategorije", systemImage: "folder")
@@ -49,14 +53,6 @@ struct MoneyTrackerApp: App {
                     GoalsView()
                         .tabItem {
                             Label("Cilji", systemImage: "target")
-                        }
-                    SubscriptionsView()
-                        .tabItem {
-                            Label("Naročnine", systemImage: "creditcard")
-                        }
-                    CalendarView()
-                        .tabItem {
-                            Label("Kalendar", systemImage: "calendar")
                         }
                 }
                 

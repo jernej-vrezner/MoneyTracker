@@ -13,10 +13,10 @@ struct AddCategoryView: View {
     @State var color: CategoryColor = .red
     @State private var monthlyLimitText: String = ""
     @State var icon: String = "tag.fill"
+    @State private var subcategoryNames: [String] = []
+    @State private var newSubcategoryName = ""
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-
-    let iconOptions = ["fork.knife", "car.fill", "bag.fill", "house.fill", "gamecontroller.fill", "heart.fill", "airplane", "creditcard.fill", "gift.fill", "tag.fill"]
 
     var body: some View {
         Form {
@@ -25,37 +25,30 @@ struct AddCategoryView: View {
             }
             .listRowBackground(Color("cardBackground"))
 
-            Section(header: Text("BARVA").font(.system(.caption2, design: .monospaced)).foregroundStyle(Color("textSecondary"))) {
-                Picker("Barva", selection: $color) {
-                    ForEach(CategoryColor.allCases, id: \.self) { c in
-                        Text(c.rawValue).tag(c)
-                    }
-                }
-            }
-            .listRowBackground(Color("cardBackground"))
-
-            Section(header: Text("IKONA").font(.system(.caption2, design: .monospaced)).foregroundStyle(Color("textSecondary"))) {
-                LazyVGrid(columns: Array(repeating: GridItem(), count: 5)) {
-                    ForEach(iconOptions, id: \.self) { option in
-                        Button {
-                            icon = option
-                        } label: {
-                            Image(systemName: option)
-                                .font(.title2)
-                                .frame(width: 44, height: 44)
-                                .background(icon == option ? Color.accentColor : Color("appBackground"))
-                                .foregroundStyle(icon == option ? .white : Color("textPrimary"))
-                                .clipShape(Circle())
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            }
-            .listRowBackground(Color("cardBackground"))
+            CategoryAppearancePicker(color: $color, icon: $icon)
 
             Section(header: Text("MESEČNI LIMIT").font(.system(.caption2, design: .monospaced)).foregroundStyle(Color("textSecondary"))) {
                 TextField("0,00 €", text: $monthlyLimitText)
                     .keyboardType(.decimalPad)
+            }
+            .listRowBackground(Color("cardBackground"))
+
+            Section(header: Text("PODKATEGORIJE").font(.system(.caption2, design: .monospaced)).foregroundStyle(Color("textSecondary"))) {
+                ForEach(subcategoryNames, id: \.self) { subName in
+                    Text(subName)
+                }
+                .onDelete { offsets in
+                    subcategoryNames.remove(atOffsets: offsets)
+                }
+
+                HStack {
+                    TextField("Nova podkategorija", text: $newSubcategoryName)
+                    Button("Dodaj") {
+                        addSubcategoryName()
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(Color.accentColor)
+                }
             }
             .listRowBackground(Color("cardBackground"))
 
@@ -64,6 +57,9 @@ struct AddCategoryView: View {
                     let limitValue = Decimal(string: monthlyLimitText.replacingOccurrences(of: ",", with: ".")) ?? 0
                     let newCategory = Category(name: name, color: color, monthlyLimit: limitValue, icon: icon)
                     modelContext.insert(newCategory)
+                    for subName in subcategoryNames {
+                        modelContext.insert(Subcategory(name: subName, parent: newCategory))
+                    }
                     dismiss()
                 }
                 .foregroundStyle(Color.accentColor)
@@ -73,5 +69,12 @@ struct AddCategoryView: View {
         }
         .scrollContentBackground(.hidden)
         .background(Color("appBackground"))
+    }
+
+    private func addSubcategoryName() {
+        let trimmed = newSubcategoryName.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty, !subcategoryNames.contains(trimmed) else { return }
+        subcategoryNames.append(trimmed)
+        newSubcategoryName = ""
     }
 }

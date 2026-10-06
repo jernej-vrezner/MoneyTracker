@@ -26,6 +26,8 @@ struct EditCategoryView: View {
                 }
                 .listRowBackground(Color("cardBackground"))
 
+                CategoryAppearancePicker(color: $category.color, icon: $category.icon)
+
                 Section(header: Text("PODKATEGORIJE").font(.system(.caption2, design: .monospaced)).foregroundStyle(Color("textSecondary"))) {
                     ForEach(sortedSubcategories) { sub in
                         SubcategoryEditRow(subcategory: sub)
