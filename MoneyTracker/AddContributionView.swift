@@ -9,18 +9,39 @@ import SwiftData
 
 struct AddContributionView: View {
     let goal: Goal
-    @State var amount: Decimal = 0
+    @State private var amountInput: String = "0"
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        Form {
-            Section(header: Text("Znesek prispevka")) {
-                TextField("Znesek", value: $amount, format: .currency(code: "EUR"))
+        NavigationStack {
+            VStack {
+                VStack(spacing: 4) {
+                    Text(amountInput.replacingOccurrences(of: ".", with: ",") + " €")
+                        .font(.system(size: 44, weight: .bold, design: .monospaced))
+                        .foregroundStyle(Color("textPrimary"))
+                    Text("Znesek prispevka")
+                        .font(.subheadline)
+                        .foregroundStyle(Color("textSecondary"))
+                }
+                .padding(.top, 24)
+
+                Spacer()
+
+                NumericKeypad(input: $amountInput)
+
+                Spacer()
             }
-            Section {
-                Button("Dodaj") {
-                    goal.savedAmount += amount
-                    dismiss()
+            .navigationTitle("Dodaj prispevek")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Prekliči") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Dodaj") {
+                        goal.savedAmount += Decimal(string: amountInput) ?? 0
+                        dismiss()
+                    }
                 }
             }
         }

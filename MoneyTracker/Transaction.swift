@@ -21,6 +21,7 @@ final class Transaction {
     var type: TransactioType = TransactioType.expense
     var note: String = ""
     var category: Category? = nil
+    var subcategory: Subcategory? = nil
     
     
     init(amount: Decimal, date: Date, type: TransactioType, note: String, category: Category? = nil) {

@@ -19,6 +19,8 @@ final class Category {
     var color: CategoryColor = CategoryColor.red
     var monthlyLimit: Decimal = 0
     var icon: String = "tag.fill"
+    @Relationship(deleteRule: .cascade, inverse: \Subcategory.parent)
+    var subcategories: [Subcategory]? = []
     
     
     init(name: String, color: CategoryColor, monthlyLimit: Decimal,icon:String) {

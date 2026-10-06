@@ -123,7 +123,7 @@ struct CalendarView: View {
                         icon: transaction.category?.icon ?? "questionmark.circle",
                         color: transaction.category?.color.color ?? Color("textSecondary")
                     )
-                    Text(transaction.category?.name ?? "Brez kategorije")
+                    Text((transaction.category?.name ?? "Brez kategorije") + (transaction.subcategory.map { " › " + $0.name } ?? ""))
                         .foregroundStyle(Color("textPrimary"))
                     Spacer()
                     Text(transaction.amount.formatted(.currency(code: "EUR")))
