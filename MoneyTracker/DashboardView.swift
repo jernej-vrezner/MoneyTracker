@@ -281,11 +281,14 @@ struct DashboardView: View {
         for subscription in subscriptions {
             let alreadyCharged = Calendar.current.isDate(subscription.lastChargedMonth, equalTo: Date(), toGranularity: .month)
             let today = Calendar.current.component(.day, from: Date())
-            let dayHasArrived = today >= subscription.billingDay
+            let daysInMonth = Calendar.current.range(of: .day, in: .month, for: Date())!.count
+            let dayHasArrived = today >= min(subscription.billingDay, daysInMonth)
 
             if !alreadyCharged && dayHasArrived {
-                let newTransaction = Transaction(amount: subscription.amount, date: Date(), type: .expense, note: "Naročnina: \(subscription.name)", category: subscription.category)
+                let noteText = subscription.note.isEmpty ? "Naročnina: \(subscription.name)" : "Naročnina: \(subscription.name) · \(subscription.note)"
+                let newTransaction = Transaction(amount: subscription.amount, date: Date(), type: .expense, note: noteText, category: subscription.category)
                 modelContext.insert(newTransaction)
+                newTransaction.subcategory = subscription.subcategory
                 subscription.lastChargedMonth = Date()
             }
         }

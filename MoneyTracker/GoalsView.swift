@@ -12,6 +12,7 @@ struct GoalsView: View {
     @Query private var goals: [Goal]
     @State private var showingAddGoal = false
     @State private var goalForContribution: Goal? = nil
+    @State private var goalToEdit: Goal? = nil
     @Environment(\.modelContext) private var modelContext
 
     var body: some View {
@@ -36,6 +37,8 @@ struct GoalsView: View {
                                         .foregroundStyle(Color("textSecondary"))
                                 }
                             }
+                            .contentShape(Rectangle())
+                            .onTapGesture { goalToEdit = goal }
 
                             HStack(spacing: 12) {
                                 VStack(alignment: .leading, spacing: 4) {
@@ -110,6 +113,9 @@ struct GoalsView: View {
             .background(Color("appBackground"))
             .sheet(isPresented: $showingAddGoal) {
                 AddGoalView()
+            }
+            .sheet(item: $goalToEdit) { goal in
+                AddGoalView(goal: goal)
             }
             .sheet(item: $goalForContribution) { goal in
                 AddContributionView(goal: goal)

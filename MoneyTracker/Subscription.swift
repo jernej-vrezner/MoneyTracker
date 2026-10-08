@@ -16,6 +16,8 @@ final class Subscription{
     var amount: Decimal = 0
     var billingDay: Int = 1
     var category: Category? = nil
+    var subcategory: Subcategory? = nil
+    var note: String = ""
     var lastChargedMonth: Date =  Date.distantPast
     
     

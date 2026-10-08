@@ -14,6 +14,7 @@ struct SubscriptionsView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var subscriptions: [Subscription]
     @State private var showingAddSubscription = false
+    @State private var subscriptionToEdit: Subscription? = nil
 
     var body: some View {
         List {
@@ -32,6 +33,8 @@ struct SubscriptionsView: View {
                         .foregroundStyle(Color("negativeColor"))
                 }
                 .padding(.vertical, 4)
+                .contentShape(Rectangle())
+                .onTapGesture { subscriptionToEdit = subscription }
                 .listRowBackground(
                     RoundedRectangle(cornerRadius: 16)
                         .fill(Color("cardBackground"))
@@ -67,6 +70,9 @@ struct SubscriptionsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showingAddSubscription) {
             AddSubscriptionView()
+        }
+        .sheet(item: $subscriptionToEdit) { subscription in
+            AddSubscriptionView(subscription: subscription)
         }
     }
 
