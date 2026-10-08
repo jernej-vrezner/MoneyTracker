@@ -19,6 +19,20 @@ struct AddTransactionView: View {
     @Environment(\.dismiss) private var dismiss
     @Query private var categories: [Category]
 
+    let transactionToEdit: Transaction?
+
+    init(transaction: Transaction? = nil) {
+        self.transactionToEdit = transaction
+        if let transaction {
+            _date = State(initialValue: transaction.date)
+            _type = State(initialValue: transaction.type)
+            _note = State(initialValue: transaction.note)
+            _selectedCategory = State(initialValue: transaction.category)
+            _selectedSubcategory = State(initialValue: transaction.subcategory)
+            _amountInput = State(initialValue: "\(transaction.amount)")
+        }
+    }
+
     var body: some View {
         NavigationStack {
             VStack {
@@ -117,7 +131,7 @@ struct AddTransactionView: View {
 
                 Spacer()
             }
-            .navigationTitle("Nova transakcija")
+            .navigationTitle(transactionToEdit == nil ? "Nova transakcija" : "Uredi transakcijo")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -125,9 +139,19 @@ struct AddTransactionView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Shrani") {
-                        let newTransaction = Transaction(amount: Decimal(string: amountInput) ?? 0, date: date, type: type, note: note, category: selectedCategory)
-                        modelContext.insert(newTransaction)
-                        newTransaction.subcategory = selectedSubcategory
+                        let amount = Decimal(string: amountInput) ?? 0
+                        if let transaction = transactionToEdit {
+                            transaction.amount = amount
+                            transaction.date = date
+                            transaction.type = type
+                            transaction.note = note
+                            transaction.category = selectedCategory
+                            transaction.subcategory = selectedSubcategory
+                        } else {
+                            let newTransaction = Transaction(amount: amount, date: date, type: type, note: note, category: selectedCategory)
+                            modelContext.insert(newTransaction)
+                            newTransaction.subcategory = selectedSubcategory
+                        }
                         dismiss()
                     }
                 }

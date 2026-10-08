@@ -12,7 +12,8 @@ struct CalendarView: View {
     @Query private var transactions: [Transaction]
     @State private var displayedMonth: Date = Date()
     @State private var selectedDate: Date? = nil
-    
+    @State private var transactionToEdit: Transaction? = nil
+
     var daysInMonth: [Date] {
         let calendar = Calendar.current
         let range = calendar.range(of: .day, in: .month, for: displayedMonth)!
@@ -130,6 +131,8 @@ struct CalendarView: View {
                         .font(.system(.body, design: .monospaced))
                         .foregroundStyle(transaction.type == .income ? Color("positiveColor") : Color("negativeColor"))
                 }
+                .contentShape(Rectangle())
+                .onTapGesture { transactionToEdit = transaction }
                 .listRowBackground(
                     RoundedRectangle(cornerRadius: 16)
                         .fill(Color("cardBackground"))
@@ -142,5 +145,8 @@ struct CalendarView: View {
         }
         .padding(.top)
         .background(Color("appBackground"))
+        .sheet(item: $transactionToEdit) { transaction in
+            AddTransactionView(transaction: transaction)
+        }
     }
 }

@@ -51,7 +51,7 @@ struct CategoriesView: View {
                         }
 
                         CategoryProgressBar(
-                            progress: Double(truncating: spent(for: category) as NSNumber) / Double(truncating: category.monthlyLimit as NSNumber),
+                            progress: category.progress(spent: spent(for: category)),
                             color: spent(for: category) > category.monthlyLimit ? Color("negativeColor") : category.color.color
                         )
 

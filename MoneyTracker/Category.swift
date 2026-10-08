@@ -56,3 +56,10 @@ extension CategoryColor {
         }
     }
 }
+
+extension Category {
+    func progress(spent: Decimal) -> Double {
+        guard monthlyLimit > 0 else { return spent > 0 ? 1 : 0 }
+        return Double(truncating: (spent / monthlyLimit) as NSNumber)
+    }
+}
