@@ -91,38 +91,7 @@ struct DashboardView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(Date().formatted(.dateTime.month(.wide).year()))
-                    .font(.system(.caption, design: .monospaced))
-                    .textCase(.uppercase)
-                    .foregroundStyle(Color("textSecondary"))
-                HStack {
-                    Text("Pregled")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .foregroundStyle(Color("textPrimary"))
-                    Spacer()
-                    HStack(spacing: 8) {
-                        Image(systemName: "moon.fill")
-                            .frame(width: 32, height: 32)
-                            .background(Color("cardBackground"))
-                            .clipShape(Circle())
-                        Text("SI")
-                            .font(.caption)
-                            .padding(8)
-                            .background(Color("cardBackground"))
-                            .clipShape(Capsule())
-                        Text("Uredi")
-                            .font(.subheadline.weight(.medium))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(Color.accentColor.opacity(0.15))
-                            .foregroundStyle(Color.accentColor)
-                            .clipShape(Capsule())
-                    }
-                }
-            }
-            .padding()
+            ScreenHeader(title: "Pregled")
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
@@ -260,7 +229,7 @@ struct DashboardView: View {
                                         .foregroundStyle(spent(for: category) > category.monthlyLimit ? Color("negativeColor") : category.color.color)
                                 }
                                 CategoryProgressBar(
-                                    progress: Double(truncating: spent(for: category) as NSNumber) / Double(truncating: category.monthlyLimit as NSNumber),
+                                    progress: category.progress(spent: spent(for: category)),
                                     color: spent(for: category) > category.monthlyLimit ? Color("negativeColor") : category.color.color
                                 )
                             }

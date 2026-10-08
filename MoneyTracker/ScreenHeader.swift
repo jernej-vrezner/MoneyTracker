@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ScreenHeader: View {
     let title: String
+    @State private var showingSettings = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -23,15 +24,16 @@ struct ScreenHeader: View {
                     .foregroundStyle(Color("textPrimary"))
                 Spacer()
                 HStack(spacing: 8) {
-                    Image(systemName: "moon.fill")
-                        .frame(width: 32, height: 32)
-                        .background(Color("cardBackground"))
-                        .clipShape(Circle())
-                    Text("SI")
-                        .font(.caption)
-                        .padding(8)
-                        .background(Color("cardBackground"))
-                        .clipShape(Capsule())
+                    Button {
+                        showingSettings = true
+                    } label: {
+                        Image(systemName: "gearshape.fill")
+                            .foregroundStyle(Color("textPrimary"))
+                            .frame(width: 32, height: 32)
+                            .background(Color("cardBackground"))
+                            .clipShape(Circle())
+                    }
+                    .buttonStyle(.plain)
                     Text("Uredi")
                         .font(.subheadline.weight(.medium))
                         .padding(.horizontal, 12)
@@ -43,5 +45,8 @@ struct ScreenHeader: View {
             }
         }
         .padding()
+        .sheet(isPresented: $showingSettings) {
+            SettingsView()
+        }
     }
 }

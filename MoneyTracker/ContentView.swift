@@ -13,6 +13,7 @@ struct ContentView: View {
     @Query private var transactions: [Transaction]
     @Query private var categories: [Category]
     @State private var showingAddView = false
+    @State private var transactionToEdit: Transaction? = nil
     @State private var selectedFilterCategory: Category? = nil
     @State private var viewMode: ViewMode = .list
 
@@ -137,6 +138,8 @@ struct ContentView: View {
                                         .foregroundStyle(transaction.type == .income ? Color("positiveColor") : Color("negativeColor"))
                                 }
                                 .padding(.vertical, 4)
+                                .contentShape(Rectangle())
+                                .onTapGesture { transactionToEdit = transaction }
                                 .listRowBackground(
                                     RoundedRectangle(cornerRadius: 16)
                                         .fill(Color("cardBackground"))
@@ -166,6 +169,9 @@ struct ContentView: View {
                     EditButton()
                 }
 #endif
+            }
+            .sheet(item: $transactionToEdit) { transaction in
+                AddTransactionView(transaction: transaction)
             }
             .sheet(isPresented: $showingAddView) {
                 AddTransactionView()
