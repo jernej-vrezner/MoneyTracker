@@ -12,10 +12,18 @@ import Charts
 struct DashboardView: View {
     @State private var showingBudgetEdit = false
     @State private var showingBudgetInfo = false
+    @State private var showingDashboardEdit = false
+    @AppStorage("dashboardOrder") private var orderRaw = ""
+    @AppStorage("dashboardHidden") private var hiddenRaw = ""
     @Query private var transactions: [Transaction]
     @Query private var categories: [Category]
     @Query private var subscriptions: [Subscription]
     @Environment(\.modelContext) private var modelContext
+
+    private var visibleCards: [DashboardCard] {
+        let hidden = DashboardCard.decodeSet(hiddenRaw)
+        return DashboardCard.decode(orderRaw).filter { !hidden.contains($0) }
+    }
 
     var transactionsThisMonth: [Transaction] {
         transactions.filter { Calendar.current.isDate($0.date, equalTo: Date(), toGranularity: .month) }
@@ -37,15 +45,16 @@ struct DashboardView: View {
         totalIncome - totalExpense
     }
 
-    var lastSixMonths: [MonthlyTotal] {
-        (0..<6).reversed().map { offset in
+    var lastTwelveMonthsExpense: [MonthlyTotal] {
+        (0..<12).reversed().map { offset in
             let monthDate = Calendar.current.date(byAdding: .month, value: -offset, to: Date())!
-            let monthTransactions = transactions.filter {
-                Calendar.current.isDate($0.date, equalTo: monthDate, toGranularity: .month)
-            }
-            let income = monthTransactions.filter { $0.type == .income }.reduce(0) { $0 + $1.amount }
-            let expense = monthTransactions.filter { $0.type == .expense }.reduce(0) { $0 + $1.amount }
-            return MonthlyTotal(month: monthDate, income: income, expense: expense)
+            let expense = transactions
+                .filter {
+                    $0.type == .expense
+                    && Calendar.current.isDate($0.date, equalTo: monthDate, toGranularity: .month)
+                }
+                .reduce(0) { $0 + $1.amount }
+            return MonthlyTotal(month: monthDate, income: 0, expense: expense)
         }
     }
 
@@ -91,173 +100,13 @@ struct DashboardView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ScreenHeader(title: "Pregled")
+            ScreenHeader(title: "Pregled", onEdit: { showingDashboardEdit = true })
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    VStack(alignment: .leading, spacing: 14) {
-                        HStack {
-                            Text("PORABA VS. BUDGET")
-                                .font(.system(.caption2, design: .monospaced))
-                                .foregroundStyle(Color("textSecondary"))
-                            Button {
-                                showingBudgetInfo = true
-                            } label: {
-                                Image(systemName: "info.circle")
-                                    .font(.caption)
-                                    .foregroundStyle(Color("textSecondary"))
-                            }
-                            .popover(isPresented: $showingBudgetInfo) {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("Kaj to pomeni?").font(.headline)
-                                    Text("Prikazuje porabo glede na skupni mesečni budget vseh kategorij. Projekcija oceni skupno porabo do konca meseca, če nadaljuješ s trenutnim tempom.")
-                                        .font(.subheadline)
-                                }
-                                .padding()
-                                .frame(maxWidth: 280)
-                            }
-                            Spacer()
-                            Text("dan \(Calendar.current.component(.day, from: Date()))/\(Calendar.current.range(of: .day, in: .month, for: Date())!.count)")
-                                .font(.system(.caption2, design: .monospaced))
-                                .foregroundStyle(Color("textSecondary"))
-                        }
-                        HStack(alignment: .lastTextBaseline, spacing: 6) {
-                            Text(totalExpense.formatted(.currency(code: "EUR")))
-                                .font(.system(.largeTitle, design: .monospaced).weight(.bold))
-                                .foregroundStyle(Color("textPrimary"))
-                            Text("/ \(totalBudget.formatted(.currency(code: "EUR")))")
-                                .font(.system(.subheadline, design: .monospaced))
-                                .foregroundStyle(Color("textSecondary"))
-                        }
-                        CategoryProgressBar(progress: budgetPercentUsed, color: Color.accentColor)
-                        HStack {
-                            Text("\(Int(budgetPercentUsed * 100))% porabljeno")
-                            Spacer()
-                            Text("načrtovano \(Int(plannedPercent * 100))%")
-                        }
-                        .font(.system(.caption, design: .monospaced))
-                        .foregroundStyle(Color("textSecondary"))
-                        Text(budgetPercentUsed > plannedPercent
-                             ? "Za \(Int((budgetPercentUsed - plannedPercent) * 100)) % pred načrtom. Če želiš ostati v okviru, imaš do \(Calendar.current.range(of: .day, in: .month, for: Date())!.count). \(Calendar.current.component(.month, from: Date())). na voljo \((totalBudget - totalExpense).formatted(.currency(code: "EUR")))."
-                             : "V okviru načrta. Če želiš ostati v okviru, imaš do \(Calendar.current.range(of: .day, in: .month, for: Date())!.count). \(Calendar.current.component(.month, from: Date())). na voljo \((totalBudget - totalExpense).formatted(.currency(code: "EUR")))."
-                        )
-                        .font(.caption)
-                        .foregroundStyle(Color("textPrimary"))
-                        .padding(12)
-                        .background(Color.white.opacity(0.5))
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                    ForEach(visibleCards) { card in
+                        cardView(card)
                     }
-                    .padding()
-                    .background(Color.accentColor.opacity(0.15))
-                    .clipShape(RoundedRectangle(cornerRadius: 26))
-
-                    VStack(alignment: .leading, spacing: 14) {
-                        Text("PRILIVI IN ODLIVI")
-                            .font(.system(.caption2, design: .monospaced))
-                            .foregroundStyle(Color("textSecondary"))
-
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack {
-                                Text("Prilivi").foregroundStyle(Color("textSecondary"))
-                                Spacer()
-                                Text(totalIncome.formatted(.currency(code: "EUR")))
-                                    .font(.system(.subheadline, design: .monospaced).weight(.semibold))
-                                    .foregroundStyle(Color("positiveColor"))
-                            }
-                            CategoryProgressBar(progress: incomeRatio, color: Color("positiveColor"))
-                        }
-
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack {
-                                Text("Odlivi").foregroundStyle(Color("textSecondary"))
-                                Spacer()
-                                Text(totalExpense.formatted(.currency(code: "EUR")))
-                                    .font(.system(.subheadline, design: .monospaced).weight(.semibold))
-                                    .foregroundStyle(Color("negativeColor"))
-                            }
-                            CategoryProgressBar(progress: expenseRatio, color: Color("negativeColor"))
-                        }
-
-                        Divider()
-
-                        HStack {
-                            Text("Razlika").foregroundStyle(Color("textSecondary"))
-                            Spacer()
-                            Text(net.formatted(.currency(code: "EUR")))
-                                .font(.system(.subheadline, design: .monospaced).weight(.semibold))
-                                .foregroundStyle(Color("textPrimary"))
-                        }
-
-                        HStack {
-                            Text("Investicije").foregroundStyle(Color("textSecondary"))
-                            Spacer()
-                            Text(totalInvestment.formatted(.currency(code: "EUR")))
-                                .font(.system(.caption, design: .monospaced))
-                                .foregroundStyle(Color("textSecondary"))
-                        }
-                    }
-                    .cardStyle()
-
-                    VStack(alignment: .leading, spacing: 14) {
-                        HStack {
-                            Text("BUDGET PO KATEGORIJAH")
-                                .font(.system(.caption2, design: .monospaced))
-                                .foregroundStyle(Color("textSecondary"))
-                            Spacer()
-                            Text("\(totalExpense.formatted(.currency(code: "EUR"))) / \(totalBudget.formatted(.currency(code: "EUR")))")
-                                .font(.system(.caption2, design: .monospaced))
-                                .foregroundStyle(Color("textSecondary"))
-                            Button {
-                                showingBudgetEdit = true
-                            } label: {
-                                Image(systemName: "pencil")
-                                    .frame(width: 26, height: 26)
-                                    .background(Color("appBackground"))
-                                    .clipShape(Circle())
-                            }
-                        }
-                        ForEach(categories) { category in
-                            VStack(alignment: .leading, spacing: 6) {
-                                HStack {
-                                    CategoryIconBadge(icon: category.icon, color: category.color.color)
-                                    Text(category.name)
-                                        .font(.subheadline.weight(.medium))
-                                        .foregroundStyle(Color("textPrimary"))
-                                    Spacer()
-                                    Text("\(spent(for: category).formatted(.currency(code: "EUR"))) / \(category.monthlyLimit.formatted(.currency(code: "EUR")))")
-                                        .font(.system(.caption, design: .monospaced))
-                                        .foregroundStyle(spent(for: category) > category.monthlyLimit ? Color("negativeColor") : category.color.color)
-                                }
-                                CategoryProgressBar(
-                                    progress: category.progress(spent: spent(for: category)),
-                                    color: spent(for: category) > category.monthlyLimit ? Color("negativeColor") : category.color.color
-                                )
-                            }
-                        }
-                    }
-                    .cardStyle()
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Zadnje transakcije").font(.headline)
-                        ForEach(recentTransactions) { transaction in
-                            VStack(alignment: .leading) {
-                                HStack {
-                                    CategoryIconBadge(
-                                        icon: transaction.category?.icon ?? "questionmark.circle",
-                                        color: transaction.category?.color.color ?? Color("textSecondary")
-                                    )
-                                    Text(transaction.category?.name ?? "Brez kategorije")
-                                    Spacer()
-                                    Text(transaction.amount.formatted(.currency(code: "EUR")))
-                                        .font(.system(.body, design: .monospaced))
-                                        .foregroundStyle(transaction.type == .income ? Color("positiveColor") : Color("negativeColor"))
-                                }
-                                Text("\(transaction.type.rawValue) • \(transaction.date.formatted(date: .abbreviated, time: .omitted))")
-                                    .font(.caption)
-                                    .foregroundStyle(Color("textSecondary"))
-                            }
-                        }
-                    }
-                    .cardStyle()
                 }
                 .padding()
             }
@@ -269,6 +118,231 @@ struct DashboardView: View {
         .sheet(isPresented: $showingBudgetEdit) {
             BudgetEditView()
         }
+        .sheet(isPresented: $showingDashboardEdit) {
+            DashboardEditView()
+        }
+    }
+
+    @ViewBuilder
+    private func cardView(_ card: DashboardCard) -> some View {
+        switch card {
+        case .budget: heroCard
+        case .flows: flowsCard
+        case .projection: projectionCard
+        case .categories: categoriesCard
+        case .recent: recentCard
+        }
+    }
+
+    private var heroCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text("PORABA VS. BUDGET")
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundStyle(Color("textSecondary"))
+                Button {
+                    showingBudgetInfo = true
+                } label: {
+                    Image(systemName: "info.circle")
+                        .font(.caption)
+                        .foregroundStyle(Color("textSecondary"))
+                }
+                .popover(isPresented: $showingBudgetInfo) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Kaj to pomeni?").font(.headline)
+                        Text("Prikazuje porabo glede na skupni mesečni budget vseh kategorij. Projekcija oceni skupno porabo do konca meseca, če nadaljuješ s trenutnim tempom.")
+                            .font(.subheadline)
+                    }
+                    .padding()
+                    .frame(maxWidth: 280)
+                }
+                Spacer()
+                Text("dan \(Calendar.current.component(.day, from: Date()))/\(Calendar.current.range(of: .day, in: .month, for: Date())!.count)")
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundStyle(Color("textSecondary"))
+            }
+            HStack(alignment: .lastTextBaseline, spacing: 6) {
+                Text(totalExpense.formatted(.currency(code: "EUR")))
+                    .font(.system(.largeTitle, design: .monospaced).weight(.bold))
+                    .foregroundStyle(Color("textPrimary"))
+                Text("/ \(totalBudget.formatted(.currency(code: "EUR")))")
+                    .font(.system(.subheadline, design: .monospaced))
+                    .foregroundStyle(Color("textSecondary"))
+            }
+            CategoryProgressBar(progress: budgetPercentUsed, color: Color.accentColor)
+            HStack {
+                Text("\(Int(budgetPercentUsed * 100))% porabljeno")
+                Spacer()
+                Text("načrtovano \(Int(plannedPercent * 100))%")
+            }
+            .font(.system(.caption, design: .monospaced))
+            .foregroundStyle(Color("textSecondary"))
+            Text(budgetPercentUsed > plannedPercent
+                 ? "Za \(Int((budgetPercentUsed - plannedPercent) * 100)) % pred načrtom. Če želiš ostati v okviru, imaš do \(Calendar.current.range(of: .day, in: .month, for: Date())!.count). \(Calendar.current.component(.month, from: Date())). na voljo \((totalBudget - totalExpense).formatted(.currency(code: "EUR")))."
+                 : "V okviru načrta. Če želiš ostati v okviru, imaš do \(Calendar.current.range(of: .day, in: .month, for: Date())!.count). \(Calendar.current.component(.month, from: Date())). na voljo \((totalBudget - totalExpense).formatted(.currency(code: "EUR")))."
+            )
+            .font(.caption)
+            .foregroundStyle(Color("textPrimary"))
+            .padding(12)
+            .background(Color.white.opacity(0.5))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.accentColor.opacity(0.15))
+        .clipShape(RoundedRectangle(cornerRadius: 26))
+    }
+
+    private var flowsCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("PRILIVI IN ODLIVI")
+                .font(.system(.caption2, design: .monospaced))
+                .foregroundStyle(Color("textSecondary"))
+
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text("Prilivi").foregroundStyle(Color("textSecondary"))
+                    Spacer()
+                    Text(totalIncome.formatted(.currency(code: "EUR")))
+                        .font(.system(.subheadline, design: .monospaced).weight(.semibold))
+                        .foregroundStyle(Color("positiveColor"))
+                }
+                CategoryProgressBar(progress: incomeRatio, color: Color("positiveColor"))
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text("Odlivi").foregroundStyle(Color("textSecondary"))
+                    Spacer()
+                    Text(totalExpense.formatted(.currency(code: "EUR")))
+                        .font(.system(.subheadline, design: .monospaced).weight(.semibold))
+                        .foregroundStyle(Color("negativeColor"))
+                }
+                CategoryProgressBar(progress: expenseRatio, color: Color("negativeColor"))
+            }
+
+            Divider()
+
+            HStack {
+                Text("Razlika").foregroundStyle(Color("textSecondary"))
+                Spacer()
+                Text(net.formatted(.currency(code: "EUR")))
+                    .font(.system(.subheadline, design: .monospaced).weight(.semibold))
+                    .foregroundStyle(Color("textPrimary"))
+            }
+
+            HStack {
+                Text("Investicije").foregroundStyle(Color("textSecondary"))
+                Spacer()
+                Text(totalInvestment.formatted(.currency(code: "EUR")))
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundStyle(Color("textSecondary"))
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .cardStyle()
+    }
+
+    private var projectionCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("PROJEKCIJA")
+                .font(.system(.caption2, design: .monospaced))
+                .foregroundStyle(Color("textSecondary"))
+
+            Text(projectedExpense.formatted(.currency(code: "EUR")))
+                .font(.system(.title, design: .monospaced).weight(.bold))
+                .foregroundStyle(projectedExpense > totalBudget && totalBudget > 0 ? Color("negativeColor") : Color("textPrimary"))
+
+            Text("ob trenutnem tempu porabe do konca meseca")
+                .font(.caption)
+                .foregroundStyle(Color("textSecondary"))
+
+            Chart(Array(lastTwelveMonthsExpense.enumerated()), id: \.offset) { index, item in
+                BarMark(
+                    x: .value("Mesec", index),
+                    y: .value("€", Double(truncating: item.expense as NSNumber))
+                )
+                .foregroundStyle(index == 11 ? Color.accentColor : Color("textSecondary").opacity(0.3))
+                .cornerRadius(3)
+            }
+            .chartXAxis(.hidden)
+            .chartYAxis(.hidden)
+            .frame(height: 60)
+
+            Text("zadnjih 12 mesecev")
+                .font(.system(.caption2, design: .monospaced))
+                .foregroundStyle(Color("textSecondary"))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .cardStyle()
+    }
+
+    private var categoriesCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text("BUDGET PO KATEGORIJAH")
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundStyle(Color("textSecondary"))
+                Spacer()
+                Text("\(totalExpense.formatted(.currency(code: "EUR"))) / \(totalBudget.formatted(.currency(code: "EUR")))")
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundStyle(Color("textSecondary"))
+                Button {
+                    showingBudgetEdit = true
+                } label: {
+                    Image(systemName: "pencil")
+                        .frame(width: 26, height: 26)
+                        .background(Color("appBackground"))
+                        .clipShape(Circle())
+                }
+            }
+            ForEach(categories) { category in
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        CategoryIconBadge(icon: category.icon, color: category.color.color)
+                        Text(category.name)
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(Color("textPrimary"))
+                        Spacer()
+                        Text("\(spent(for: category).formatted(.currency(code: "EUR"))) / \(category.monthlyLimit.formatted(.currency(code: "EUR")))")
+                            .font(.system(.caption, design: .monospaced))
+                            .foregroundStyle(spent(for: category) > category.monthlyLimit ? Color("negativeColor") : category.color.color)
+                    }
+                    CategoryProgressBar(
+                        progress: category.progress(spent: spent(for: category)),
+                        color: spent(for: category) > category.monthlyLimit ? Color("negativeColor") : category.color.color
+                    )
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .cardStyle()
+    }
+
+    private var recentCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Zadnje transakcije").font(.headline)
+            ForEach(recentTransactions) { transaction in
+                VStack(alignment: .leading) {
+                    HStack {
+                        CategoryIconBadge(
+                            icon: transaction.category?.icon ?? "questionmark.circle",
+                            color: transaction.category?.color.color ?? Color("textSecondary")
+                        )
+                        Text(transaction.category?.name ?? "Brez kategorije")
+                        Spacer()
+                        Text(transaction.amount.formatted(.currency(code: "EUR")))
+                            .font(.system(.body, design: .monospaced))
+                            .foregroundStyle(transaction.type == .income ? Color("positiveColor") : Color("negativeColor"))
+                    }
+                    Text("\(transaction.type.rawValue) • \(transaction.date.formatted(date: .abbreviated, time: .omitted))")
+                        .font(.caption)
+                        .foregroundStyle(Color("textSecondary"))
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .cardStyle()
     }
 
     private func spent(for category: Category) -> Decimal {

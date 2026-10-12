@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ScreenHeader: View {
     let title: String
+    var onEdit: (() -> Void)? = nil
     @State private var showingSettings = false
 
     var body: some View {
@@ -34,13 +35,20 @@ struct ScreenHeader: View {
                             .clipShape(Circle())
                     }
                     .buttonStyle(.plain)
-                    Text("Uredi")
-                        .font(.subheadline.weight(.medium))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color.accentColor.opacity(0.15))
-                        .foregroundStyle(Color.accentColor)
-                        .clipShape(Capsule())
+                    if let onEdit {
+                        Button {
+                            onEdit()
+                        } label: {
+                            Text("Uredi")
+                                .font(.subheadline.weight(.medium))
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(Color.accentColor.opacity(0.15))
+                                .foregroundStyle(Color.accentColor)
+                                .clipShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
             }
         }
