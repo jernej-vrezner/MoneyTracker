@@ -32,7 +32,22 @@ struct SettingsView: View {
     @State private var pendingBackup: BackupData? = nil
     @State private var importError: String? = nil
     @Environment(\.dismiss) private var dismiss
+    @AppStorage("dailyReminder") private var dailyReminder = false
+    @AppStorage("dailyReminderMinutes") private var dailyMinutes = 1200
+    @AppStorage("subscriptionReminders") private var subscriptionReminders = false
+    @State private var notificationsDenied = false
 
+    private var reminderTime: Binding<Date> {
+        Binding(
+            get: {
+                Calendar.current.date(bySettingHour: dailyMinutes / 60, minute: dailyMinutes % 60, second: 0, of: Date()) ?? Date()
+            },
+            set: { newValue in
+                let parts = Calendar.current.dateComponents([.hour, .minute], from: newValue)
+                dailyMinutes = (parts.hour ?? 20) * 60 + (parts.minute ?? 0)
+            }
+        )
+    }
     private var csvText: String {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withFullDate]
@@ -104,7 +119,17 @@ struct SettingsView: View {
                     .pickerStyle(.segmented)
                 }
                 .listRowBackground(Color("cardBackground"))
-
+                Section(
+                    header: Text("OPOMNIKI").font(.system(.caption2, design: .monospaced)).foregroundStyle(Color("textSecondary")),
+                    footer: Text("Obvestila morajo biti dovoljena v nastavitvah telefona.")
+                ) {
+                    Toggle("Dnevni opomnik za vnos", isOn: $dailyReminder)
+                    if dailyReminder {
+                        DatePicker("Ura opomnika", selection: reminderTime, displayedComponents: .hourAndMinute)
+                    }
+                    Toggle("Opomniki za naročnine", isOn: $subscriptionReminders)
+                }
+                .listRowBackground(Color("cardBackground"))
                 Section(
                     header: Text("PODATKI").font(.system(.caption2, design: .monospaced)).foregroundStyle(Color("textSecondary")),
                     footer: Text("Izvoz vsebuje \(transactions.count) transakcij (CSV, odpre se tudi v Excelu ali Številkah).")
@@ -164,6 +189,44 @@ struct SettingsView: View {
                 Button("V redu", role: .cancel) {}
             } message: {
                 Text(importError ?? "")
+            }
+            .onChange(of: dailyReminder) { _, enabled in
+                if enabled {
+                    Task {
+                        let granted = await Reminders.requestAuthorization()
+                        if granted {
+                            Reminders.applyDailyReminder(enabled: true, minutes: dailyMinutes)
+                        } else {
+                            dailyReminder = false
+                            notificationsDenied = true
+                        }
+                    }
+                } else {
+                    Reminders.applyDailyReminder(enabled: false, minutes: dailyMinutes)
+                }
+            }
+            .onChange(of: dailyMinutes) { _, minutes in
+                if dailyReminder {
+                    Reminders.applyDailyReminder(enabled: true, minutes: minutes)
+                }
+            }
+            .onChange(of: subscriptionReminders) { _, enabled in
+                Task {
+                    if enabled {
+                        let granted = await Reminders.requestAuthorization()
+                        if !granted {
+                            subscriptionReminders = false
+                            notificationsDenied = true
+                            return
+                        }
+                    }
+                    await Reminders.applySubscriptionReminders(enabled: enabled, subscriptions: subscriptions)
+                }
+            }
+            .alert("Obvestila so izklopljena", isPresented: $notificationsDenied) {
+                Button("V redu", role: .cancel) {}
+            } message: {
+                Text("Dovoli obvestila za MoneyTracker v nastavitvah telefona.")
             }
             .navigationTitle("Nastavitve")
             .navigationBarTitleDisplayMode(.inline)

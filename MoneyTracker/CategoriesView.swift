@@ -24,6 +24,9 @@ struct CategoriesView: View {
     
     var body: some View {
         NavigationStack {
+            VStack(spacing: 0) {
+            ScreenHeader(title: "Kategorije")
+
             List {
                 ForEach(categories) { category in
                     VStack(alignment: .leading, spacing: 10) {
@@ -154,8 +157,9 @@ struct CategoriesView: View {
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
+            }
             .background(Color("appBackground"))
-           
+
             .sheet(isPresented: $showingAddCategory) {
                 AddCategoryView()
             }

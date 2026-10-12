@@ -22,12 +22,8 @@ enum StatsPeriod: String, CaseIterable, Identifiable {
         }
     }
 
-    var current: DateInterval {
-        Calendar.current.dateInterval(of: component, for: Date())!
-    }
-
-    var previous: DateInterval {
-        let justBeforeStart = current.start.addingTimeInterval(-1)
-        return Calendar.current.dateInterval(of: component, for: justBeforeStart)!
-    }
-}
+    func interval(offset: Int) -> DateInterval {
+        let calendar = Calendar.current
+        let shifted = calendar.date(byAdding: component, value: offset, to: Date())!
+        return calendar.dateInterval(of: component, for: shifted)!
+    }}

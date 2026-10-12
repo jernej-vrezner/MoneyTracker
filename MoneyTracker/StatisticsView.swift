@@ -48,9 +48,28 @@ struct MonthRow: Identifiable {
 struct StatisticsView: View {
     @Query private var transactions: [Transaction]
     @State private var period: StatsPeriod = .month
+    
+    @State private var offset = 0
 
+    private var selected: DateInterval { period.interval(offset: offset) }
+    private var comparison: DateInterval { period.interval(offset: offset - 1) }
+
+    private var periodTitle: String {
+        let calendar = Calendar.current
+        let start = selected.start
+        switch period {
+        case .month:
+            return start.formatted(.dateTime.month(.wide).year())
+        case .quarter:
+            let quarter = (calendar.component(.month, from: start) - 1) / 3 + 1
+            return "Q\(quarter) \(calendar.component(.year, from: start))"
+        case .year:
+            return start.formatted(.dateTime.year())
+        }
+    }
+    
     private var periodTransactions: [Transaction] {
-        let interval = period.current
+        let interval = selected
         return transactions.filter { $0.date >= interval.start && $0.date < interval.end }
     }
 
@@ -70,8 +89,9 @@ struct StatisticsView: View {
     }
 
     private var averagePerDay: Decimal {
-        let days = Calendar.current.dateComponents([.day], from: period.current.start, to: Date()).day ?? 0
-        return expense / Decimal(max(days + 1, 1))
+        let end = min(Date(), selected.end)
+        let days = Calendar.current.dateComponents([.day], from: selected.start, to: end).day ?? 0
+        return expense / Decimal(max(days + (offset == 0 ? 1 : 0), 1))
     }
 
     private var largestExpense: Decimal {
@@ -80,7 +100,7 @@ struct StatisticsView: View {
     
     private var buckets: [(label: String, interval: DateInterval)] {
         let calendar = Calendar.current
-        let interval = period.current
+        let interval = selected
         switch period {
         case .month:
             let days = calendar.range(of: .day, in: .month, for: interval.start)!.count
@@ -134,8 +154,8 @@ struct StatisticsView: View {
     }
     
     private var cumulativePoints: [CumulativePoint] {
-        cumulativeSeries(for: period.current, name: "Izbrano obdobje", until: Date())
-        + cumulativeSeries(for: period.previous, name: "Prejšnje", until: .distantFuture)
+        cumulativeSeries(for: selected, name: "Izbrano obdobje", until: Date())
+        + cumulativeSeries(for: comparison, name: "Prejšnje", until: .distantFuture)
     }
     
     private var categoryTotals: [CategoryTotal] {
@@ -219,6 +239,39 @@ struct StatisticsView: View {
                         }
                     }
                     .pickerStyle(.segmented)
+                    .onChange(of: period) { _, _ in
+                        offset = 0
+                    }
+
+                    HStack {
+                        Button {
+                            offset -= 1
+                        } label: {
+                            Image(systemName: "chevron.left")
+                                .frame(width: 36, height: 36)
+                                .background(Color("cardBackground"))
+                                .clipShape(Circle())
+                        }
+                        .buttonStyle(.plain)
+
+                        Spacer()
+                        Text(periodTitle)
+                            .font(.system(.subheadline, design: .monospaced).weight(.semibold))
+                            .foregroundStyle(Color("textPrimary"))
+                        Spacer()
+
+                        Button {
+                            offset += 1
+                        } label: {
+                            Image(systemName: "chevron.right")
+                                .frame(width: 36, height: 36)
+                                .background(Color("cardBackground"))
+                                .clipShape(Circle())
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(offset >= 0)
+                        .opacity(offset >= 0 ? 0.3 : 1)
+                    }
 
                     HStack(spacing: 12) {
                         StatTile(label: "PRILIVI", value: "+" + euro(income), color: Color("positiveColor"))

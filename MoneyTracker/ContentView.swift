@@ -15,6 +15,7 @@ struct ContentView: View {
     @State private var showingAddView = false
     @State private var transactionToEdit: Transaction? = nil
     @State private var selectedFilterCategory: Category? = nil
+    @State private var searchText = ""
     @State private var viewMode: ViewMode = .list
 
     enum ViewMode: String, CaseIterable {
@@ -43,8 +44,21 @@ struct ContentView: View {
     }
 
     var filteredTransactions: [Transaction] {
-        guard let selectedFilterCategory else { return transactions }
-        return transactions.filter { $0.category == selectedFilterCategory }
+        var result = transactions
+        if let selectedFilterCategory {
+            result = result.filter { $0.category == selectedFilterCategory }
+        }
+        let query = searchText.trimmingCharacters(in: .whitespaces).lowercased()
+        if !query.isEmpty {
+            let amountQuery = query.replacingOccurrences(of: ",", with: ".")
+            result = result.filter { transaction in
+                transaction.note.lowercased().contains(query)
+                || (transaction.category?.name.lowercased().contains(query) ?? false)
+                || (transaction.subcategory?.name.lowercased().contains(query) ?? false)
+                || "\(transaction.amount)".contains(amountQuery)
+            }
+        }
+        return result
     }
 
     var groupedTransactions: [(TransactionGroup, [Transaction])] {
@@ -75,6 +89,27 @@ struct ContentView: View {
 
                 if viewMode == .list {
 
+                    HStack(spacing: 8) {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundStyle(Color("textSecondary"))
+                        TextField("Išči po opombi, kategoriji ali znesku", text: $searchText)
+                        if !searchText.isEmpty {
+                            Button {
+                                searchText = ""
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundStyle(Color("textSecondary"))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(12)
+                    .background(Color("cardBackground"))
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .padding(.horizontal)
+                    .padding(.bottom, 8)
+
+                    
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         Button {
@@ -155,6 +190,12 @@ struct ContentView: View {
                 }
                 .listStyle(.plain)
                 .scrollContentBackground(.hidden)
+                .overlay {
+                    if groupedTransactions.isEmpty {
+                        Text("Ni zadetkov")
+                            .foregroundStyle(Color("textSecondary"))
+                    }
+                }
                 } else {
                     CalendarView()
                 }
@@ -163,13 +204,7 @@ struct ContentView: View {
 #if os(macOS)
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
 #endif
-            .toolbar {
-#if os(iOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-#endif
-            }
+
             .sheet(item: $transactionToEdit) { transaction in
                 AddTransactionView(transaction: transaction)
             }

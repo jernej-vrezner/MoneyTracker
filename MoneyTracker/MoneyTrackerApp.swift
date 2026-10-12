@@ -30,6 +30,8 @@ struct MoneyTrackerApp: App {
     
     @State private var showingAddTransaction = false
     @AppStorage("appearance") private var appearance = "system"
+    @AppStorage("subscriptionReminders") private var subscriptionReminders = false
+    @Environment(\.scenePhase) private var scenePhase
 
     private var preferredScheme: ColorScheme? {
         switch appearance {
@@ -89,6 +91,14 @@ struct MoneyTrackerApp: App {
                 AddTransactionView()
             }
             .preferredColorScheme(preferredScheme)
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .background {
+                    let subscriptions = (try? sharedModelContainer.mainContext.fetch(FetchDescriptor<Subscription>())) ?? []
+                    Task {
+                        await Reminders.applySubscriptionReminders(enabled: subscriptionReminders, subscriptions: subscriptions)
+                    }
+                }
+            }
         }
         .modelContainer(sharedModelContainer)
     }
