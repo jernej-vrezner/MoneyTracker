@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct CategoryPillPicker: View {
     let categories: [Category]
@@ -16,7 +17,7 @@ struct CategoryPillPicker: View {
         VStack(spacing: 8) {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
-                    ForEach(categories) { category in
+                    ForEach(categories, id: \.persistentModelID) { category in
                         Button {
                             selectedCategory = (selectedCategory == category) ? nil : category
                             selectedSubcategory = nil

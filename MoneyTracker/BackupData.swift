@@ -17,6 +17,8 @@ struct BackupData: Codable {
     var transactions: [TransactionDTO]
     var goals: [GoalDTO]
     var subscriptions: [SubscriptionDTO]
+    var investments: [InvestmentDTO]?
+    var investmentTrades: [TradeDTO]?
 
     struct CategoryDTO: Codable {
         var id: Int
@@ -58,8 +60,27 @@ struct BackupData: Codable {
         var categoryID: Int?
         var subcategoryID: Int?
     }
+    
+    struct InvestmentDTO: Codable {
+        var id: Int
+        var symbol: String
+        var name: String
+        var kind: AssetKind
+        var currency: String
+        var lastPrice: String?
+        var previousClose: String?
+        var lastUpdated: Date?
+    }
 
-    init(categories: [Category], transactions: [Transaction], goals: [Goal], subscriptions: [Subscription]) {
+    struct TradeDTO: Codable {
+        var investmentID: Int
+        var date: Date
+        var isBuy: Bool
+        var quantity: String
+        var totalAmount: String
+    }
+    
+    init(categories: [Category], transactions: [Transaction], goals: [Goal], subscriptions: [Subscription], investments: [Investment]) {
         var categoryIDs: [PersistentIdentifier: Int] = [:]
         var subcategoryIDs: [PersistentIdentifier: Int] = [:]
         var categoryDTOs: [CategoryDTO] = []
@@ -118,6 +139,31 @@ struct BackupData: Codable {
                 subcategoryID: s.subcategory.flatMap { subcategoryIDs[$0.persistentModelID] }
             )
         }
+        var investmentDTOs: [InvestmentDTO] = []
+        var tradeDTOs: [TradeDTO] = []
+        for (index, investment) in investments.enumerated() {
+            investmentDTOs.append(InvestmentDTO(
+                id: index,
+                symbol: investment.symbol,
+                name: investment.name,
+                kind: investment.kind,
+                currency: investment.currency,
+                lastPrice: investment.lastPrice.map { "\($0)" },
+                previousClose: investment.previousClose.map { "\($0)" },
+                lastUpdated: investment.lastUpdated
+            ))
+            for trade in investment.trades ?? [] {
+                tradeDTOs.append(TradeDTO(
+                    investmentID: index,
+                    date: trade.date,
+                    isBuy: trade.isBuy,
+                    quantity: "\(trade.quantity)",
+                    totalAmount: "\(trade.totalAmount)"
+                ))
+            }
+        }
+        self.investments = investmentDTOs
+        self.investmentTrades = tradeDTOs
     }
 }
 
@@ -138,6 +184,8 @@ struct BackupFile: Transferable {
 
 extension BackupData {
     func restore(into context: ModelContext) throws {
+        try context.delete(model: InvestmentTrade.self)
+        try context.delete(model: Investment.self)
         try context.delete(model: Transaction.self)
         try context.delete(model: Subscription.self)
         try context.delete(model: Goal.self)
@@ -199,6 +247,27 @@ extension BackupData {
             subscription.subcategory = dto.subcategoryID.flatMap { subcategoryByID[$0] }
             subscription.note = dto.note
             subscription.lastChargedMonth = dto.lastChargedMonth
+        }
+
+        var investmentByID: [Int: Investment] = [:]
+        for dto in investments ?? [] {
+            let investment = Investment(symbol: dto.symbol, name: dto.name, kind: dto.kind, currency: dto.currency)
+            investment.lastPrice = dto.lastPrice.flatMap { Decimal(string: $0) }
+            investment.previousClose = dto.previousClose.flatMap { Decimal(string: $0) }
+            investment.lastUpdated = dto.lastUpdated
+            context.insert(investment)
+            investmentByID[dto.id] = investment
+        }
+
+        for dto in investmentTrades ?? [] {
+            let trade = InvestmentTrade(
+                date: dto.date,
+                isBuy: dto.isBuy,
+                quantity: Decimal(string: dto.quantity) ?? 0,
+                totalAmount: Decimal(string: dto.totalAmount) ?? 0
+            )
+            context.insert(trade)
+            trade.investment = investmentByID[dto.investmentID]
         }
 
         try context.save()

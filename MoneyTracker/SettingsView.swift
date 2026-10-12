@@ -27,6 +27,7 @@ struct SettingsView: View {
     @Query private var categories: [Category]
     @Query private var goals: [Goal]
     @Query private var subscriptions: [Subscription]
+    @Query private var investments: [Investment]
     @Environment(\.modelContext) private var modelContext
     @State private var showingImporter = false
     @State private var pendingBackup: BackupData? = nil
@@ -147,7 +148,8 @@ struct SettingsView: View {
                             categories: categories,
                             transactions: transactions,
                             goals: goals,
-                            subscriptions: subscriptions
+                            subscriptions: subscriptions,
+                            investments: investments
                         )),
                         preview: SharePreview("MoneyTracker-backup.json")
                     ) {

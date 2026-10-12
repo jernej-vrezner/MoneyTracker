@@ -18,6 +18,8 @@ struct MoneyTrackerApp: App {
             Goal.self,
             Subscription.self,
             Subcategory.self,
+            Investment.self,
+            InvestmentTrade.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         
@@ -61,9 +63,9 @@ struct MoneyTrackerApp: App {
                         .tabItem {
                             Label("Kategorije", systemImage: "folder")
                         }
-                    GoalsView()
+                    SavingsView()
                         .tabItem {
-                            Label("Cilji", systemImage: "target")
+                            Label("Varčevanje", systemImage: "chart.line.uptrend.xyaxis")
                         }
                 }
                 

@@ -18,8 +18,6 @@ struct GoalsView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                ScreenHeader(title: "Cilji")
-
                 List {
                     ForEach(goals) { goal in
                         VStack(alignment: .leading, spacing: 14) {
