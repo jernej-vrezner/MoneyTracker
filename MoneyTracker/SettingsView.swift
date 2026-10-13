@@ -28,6 +28,7 @@ struct SettingsView: View {
     @Query private var goals: [Goal]
     @Query private var subscriptions: [Subscription]
     @Query private var investments: [Investment]
+    @Query private var accounts: [Account]
     @Environment(\.modelContext) private var modelContext
     @State private var showingImporter = false
     @State private var pendingBackup: BackupData? = nil
@@ -52,7 +53,7 @@ struct SettingsView: View {
     private var csvText: String {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withFullDate]
-        var lines = ["Datum,Tip,Znesek,Kategorija,Podkategorija,Opomba"]
+        var lines = ["Datum,Tip,Znesek,Kategorija,Podkategorija,Opomba,Račun"]
         for transaction in transactions.sorted(by: { $0.date < $1.date }) {
             let fields = [
                 formatter.string(from: transaction.date),
@@ -60,11 +61,16 @@ struct SettingsView: View {
                 "\(transaction.amount)",
                 transaction.category?.name ?? "",
                 transaction.subcategory?.name ?? "",
-                transaction.note
+                transaction.note,
+                transaction.account?.name ?? ""
             ]
             lines.append(fields.map(csvEscape).joined(separator: ","))
         }
         return lines.joined(separator: "\n")
+    }
+
+    private var pendingCount: Int {
+        pendingBackup?.transactions.count ?? 0
     }
 
     private func csvEscape(_ value: String) -> String {
@@ -134,22 +140,22 @@ struct SettingsView: View {
                 Section(
                     header: Text("PODATKI").font(.system(.caption2, design: .monospaced)).foregroundStyle(Color("textSecondary")),
                     footer: Text("Izvoz vsebuje \(transactions.count) transakcij (CSV, odpre se tudi v Excelu ali Številkah).")
-                    
                 ) {
                     ShareLink(
                         item: TransactionsCSV(text: csvText),
                         preview: SharePreview("MoneyTracker-transakcije.csv")
-                    )
-                    {
+                    ) {
                         Label("Izvozi transakcije (CSV)", systemImage: "square.and.arrow.up")
                     }
+
                     ShareLink(
                         item: BackupFile(data: BackupData(
                             categories: categories,
                             transactions: transactions,
                             goals: goals,
                             subscriptions: subscriptions,
-                            investments: investments
+                            investments: investments,
+                            accounts: accounts
                         )),
                         preview: SharePreview("MoneyTracker-backup.json")
                     ) {
@@ -179,7 +185,7 @@ struct SettingsView: View {
                 Button("Obnovi in zamenjaj", role: .destructive) { restorePending() }
                 Button("Prekliči", role: .cancel) { pendingBackup = nil }
             } message: {
-                Text("Vsi trenutni podatki bodo zamenjani s podatki iz kopije (\(pendingBackup?.transactions.count ?? 0) transakcij).")
+                Text("Vsi trenutni podatki bodo zamenjani s podatki iz kopije (\(pendingCount) transakcij).")
             }
             .alert(
                 "Napaka pri uvozu",

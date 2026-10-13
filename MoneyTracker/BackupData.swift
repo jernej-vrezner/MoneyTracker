@@ -19,6 +19,8 @@ struct BackupData: Codable {
     var subscriptions: [SubscriptionDTO]
     var investments: [InvestmentDTO]?
     var investmentTrades: [TradeDTO]?
+    var accounts: [AccountDTO]?
+    var transfers: [AccountTransferDTO]?
 
     struct CategoryDTO: Codable {
         var id: Int
@@ -42,6 +44,7 @@ struct BackupData: Codable {
         var note: String
         var categoryID: Int?
         var subcategoryID: Int?
+        var accountID: Int?
     }
 
     struct GoalDTO: Codable {
@@ -79,8 +82,26 @@ struct BackupData: Codable {
         var quantity: String
         var totalAmount: String
     }
-    
-    init(categories: [Category], transactions: [Transaction], goals: [Goal], subscriptions: [Subscription], investments: [Investment]) {
+
+    struct AccountDTO: Codable {
+        var id: Int
+        var name: String
+        var kind: AccountKind
+        var initialBalance: String
+        var color: CategoryColor
+        var includeInTotal: Bool
+        var createdAt: Date
+    }
+
+    struct AccountTransferDTO: Codable {
+        var date: Date
+        var amount: String
+        var note: String
+        var fromAccountID: Int?
+        var toAccountID: Int?
+    }
+
+    init(categories: [Category], transactions: [Transaction], goals: [Goal], subscriptions: [Subscription], investments: [Investment], accounts: [Account]) {
         var categoryIDs: [PersistentIdentifier: Int] = [:]
         var subcategoryIDs: [PersistentIdentifier: Int] = [:]
         var categoryDTOs: [CategoryDTO] = []
@@ -107,6 +128,34 @@ struct BackupData: Codable {
             }
         }
 
+        var accountIDs: [PersistentIdentifier: Int] = [:]
+        var accountDTOs: [AccountDTO] = []
+        for (index, account) in accounts.enumerated() {
+            accountIDs[account.persistentModelID] = index
+            accountDTOs.append(AccountDTO(
+                id: index,
+                name: account.name,
+                kind: account.kind,
+                initialBalance: "\(account.initialBalance)",
+                color: account.color,
+                includeInTotal: account.includeInTotal,
+                createdAt: account.createdAt
+            ))
+        }
+
+        var transferDTOs: [AccountTransferDTO] = []
+        for account in accounts {
+            for transfer in account.outgoingTransfers ?? [] {
+                transferDTOs.append(AccountTransferDTO(
+                    date: transfer.date,
+                    amount: "\(transfer.amount)",
+                    note: transfer.note,
+                    fromAccountID: transfer.fromAccount.flatMap { accountIDs[$0.persistentModelID] },
+                    toAccountID: transfer.toAccount.flatMap { accountIDs[$0.persistentModelID] }
+                ))
+            }
+        }
+
         self.version = 1
         self.categories = categoryDTOs
         self.subcategories = subcategoryDTOs
@@ -117,7 +166,8 @@ struct BackupData: Codable {
                 type: t.type,
                 note: t.note,
                 categoryID: t.category.flatMap { categoryIDs[$0.persistentModelID] },
-                subcategoryID: t.subcategory.flatMap { subcategoryIDs[$0.persistentModelID] }
+                subcategoryID: t.subcategory.flatMap { subcategoryIDs[$0.persistentModelID] },
+                accountID: t.account.flatMap { accountIDs[$0.persistentModelID] }
             )
         }
         self.goals = goals.map { g in
@@ -164,6 +214,8 @@ struct BackupData: Codable {
         }
         self.investments = investmentDTOs
         self.investmentTrades = tradeDTOs
+        self.accounts = accountDTOs
+        self.transfers = transferDTOs
     }
 }
 
@@ -184,6 +236,8 @@ struct BackupFile: Transferable {
 
 extension BackupData {
     func restore(into context: ModelContext) throws {
+        try context.delete(model: AccountTransfer.self)
+        try context.delete(model: Account.self)
         try context.delete(model: InvestmentTrade.self)
         try context.delete(model: Investment.self)
         try context.delete(model: Transaction.self)
@@ -191,6 +245,20 @@ extension BackupData {
         try context.delete(model: Goal.self)
         try context.delete(model: Subcategory.self)
         try context.delete(model: Category.self)
+
+        var accountByID: [Int: Account] = [:]
+        for dto in accounts ?? [] {
+            let account = Account(
+                name: dto.name,
+                kind: dto.kind,
+                initialBalance: Decimal(string: dto.initialBalance) ?? 0,
+                color: dto.color,
+                includeInTotal: dto.includeInTotal
+            )
+            account.createdAt = dto.createdAt
+            context.insert(account)
+            accountByID[dto.id] = account
+        }
 
         var categoryByID: [Int: Category] = [:]
         for dto in categories {
@@ -225,6 +293,18 @@ extension BackupData {
             )
             context.insert(transaction)
             transaction.subcategory = dto.subcategoryID.flatMap { subcategoryByID[$0] }
+            transaction.account = dto.accountID.flatMap { accountByID[$0] }
+        }
+
+        for dto in transfers ?? [] {
+            let transfer = AccountTransfer(
+                date: dto.date,
+                amount: Decimal(string: dto.amount) ?? 0,
+                note: dto.note
+            )
+            context.insert(transfer)
+            transfer.fromAccount = dto.fromAccountID.flatMap { accountByID[$0] }
+            transfer.toAccount = dto.toAccountID.flatMap { accountByID[$0] }
         }
 
         for dto in goals {

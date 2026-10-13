@@ -9,6 +9,7 @@ import Foundation
 
 enum DashboardCard: String, CaseIterable, Identifiable {
     case budget
+    case accounts
     case flows
     case projection
     case categories
@@ -19,6 +20,7 @@ enum DashboardCard: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .budget: return "Poraba vs. budget"
+        case .accounts: return "Računi"
         case .flows: return "Prilivi in odlivi"
         case .projection: return "Projekcija"
         case .categories: return "Budget po kategorijah"

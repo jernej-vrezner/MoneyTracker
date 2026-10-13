@@ -22,6 +22,7 @@ final class Transaction {
     var note: String = ""
     var category: Category? = nil
     var subcategory: Subcategory? = nil
+    var account: Account? = nil
     
     
     init(amount: Decimal, date: Date, type: TransactioType, note: String, category: Category? = nil) {

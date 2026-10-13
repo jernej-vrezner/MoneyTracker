@@ -18,6 +18,9 @@ struct AddTransactionView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query private var categories: [Category]
+    @Query(sort: \Account.createdAt) private var accounts: [Account]
+    @State private var selectedAccount: Account? = nil
+    @AppStorage("lastAccountStamp") private var lastAccountStamp: Double = 0
 
     let transactionToEdit: Transaction?
 
@@ -29,6 +32,7 @@ struct AddTransactionView: View {
             _note = State(initialValue: transaction.note)
             _selectedCategory = State(initialValue: transaction.category)
             _selectedSubcategory = State(initialValue: transaction.subcategory)
+            _selectedAccount = State(initialValue: transaction.account)
             _amountInput = State(initialValue: "\(transaction.amount)")
         }
     }
@@ -62,12 +66,16 @@ struct AddTransactionView: View {
                     }
                 }
                 .padding(.top, 24)
+                if !accounts.isEmpty {
+                    AccountPillPicker(accounts: accounts, selectedAccount: $selectedAccount)
+                        .padding(.top, 20)
+                }
                 CategoryPillPicker(
                     categories: categories,
                     selectedCategory: $selectedCategory,
                     selectedSubcategory: $selectedSubcategory
                 )
-                .padding(.top, 20)
+                .padding(.top, accounts.isEmpty ? 20 : 10)
                 TextField("Dodaj opombo (neobvezno)", text: $note)
                     .padding(12)
                     .background(Color("cardBackground"))
@@ -83,6 +91,11 @@ struct AddTransactionView: View {
             }
             .navigationTitle(transactionToEdit == nil ? "Nova transakcija" : "Uredi transakcijo")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                if transactionToEdit == nil && selectedAccount == nil {
+                    selectedAccount = accounts.first { $0.createdAt.timeIntervalSince1970 == lastAccountStamp } ?? accounts.first
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Prekliči") { dismiss() }
@@ -97,10 +110,15 @@ struct AddTransactionView: View {
                             transaction.note = note
                             transaction.category = selectedCategory
                             transaction.subcategory = selectedSubcategory
+                            transaction.account = selectedAccount
                         } else {
                             let newTransaction = Transaction(amount: amount, date: date, type: type, note: note, category: selectedCategory)
                             modelContext.insert(newTransaction)
                             newTransaction.subcategory = selectedSubcategory
+                            newTransaction.account = selectedAccount
+                        }
+                        if let selectedAccount {
+                            lastAccountStamp = selectedAccount.createdAt.timeIntervalSince1970
                         }
                         dismiss()
                     }

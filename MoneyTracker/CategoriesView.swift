@@ -173,6 +173,9 @@ struct CategoriesView: View {
                         Button("Dodaj testne podatke") {
                             TestData.seed(in: modelContext, categories: categories)
                         }
+                        Button("Ponastavi testne podatke (izbriše transakcije, račune, prenose)", role: .destructive) {
+                            TestData.reset(in: modelContext, categories: categories)
+                        }
                         Button("Izbriši VSE transakcije", role: .destructive) {
                             try? modelContext.delete(model: Transaction.self)
                         }

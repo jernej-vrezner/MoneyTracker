@@ -18,6 +18,7 @@ struct DashboardView: View {
     @Query private var transactions: [Transaction]
     @Query private var categories: [Category]
     @Query private var subscriptions: [Subscription]
+    @Query(sort: \Account.createdAt) private var accounts: [Account]
     @Environment(\.modelContext) private var modelContext
 
     private var visibleCards: [DashboardCard] {
@@ -99,6 +100,7 @@ struct DashboardView: View {
     }
 
     var body: some View {
+        NavigationStack {
         VStack(spacing: 0) {
             ScreenHeader(title: "Pregled", onEdit: { showingDashboardEdit = true })
 
@@ -112,6 +114,8 @@ struct DashboardView: View {
             }
         }
         .background(Color("appBackground"))
+        .toolbar(.hidden, for: .navigationBar)
+        }
         .onAppear {
             chargeSubscriptionsIfNeeded()
         }
@@ -127,11 +131,67 @@ struct DashboardView: View {
     private func cardView(_ card: DashboardCard) -> some View {
         switch card {
         case .budget: heroCard
+        case .accounts: accountsCard
         case .flows: flowsCard
         case .projection: projectionCard
         case .categories: categoriesCard
         case .recent: recentCard
         }
+    }
+
+    private var accountsTotal: Decimal {
+        accounts.filter { $0.includeInTotal }.reduce(Decimal(0)) { $0 + $1.balance }
+    }
+
+    private var accountsCard: some View {
+        NavigationLink {
+            AccountsView()
+        } label: {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text("RAČUNI")
+                        .font(.system(.caption2, design: .monospaced))
+                        .foregroundStyle(Color("textSecondary"))
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(Color("textSecondary"))
+                }
+
+                if accounts.isEmpty {
+                    Text("Dodaj prvi račun")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.accentColor)
+                } else {
+                    Text(accountsTotal.formatted(.currency(code: "EUR")))
+                        .font(.system(.title, design: .monospaced).weight(.bold))
+                        .foregroundStyle(Color("textPrimary"))
+
+                    ForEach(accounts.prefix(3)) { account in
+                        HStack(spacing: 10) {
+                            CategoryIconBadge(icon: account.kind.iconName, color: account.color.color)
+                            Text(account.name)
+                                .font(.subheadline)
+                                .foregroundStyle(Color("textPrimary"))
+                                .lineLimit(1)
+                            Spacer()
+                            Text(account.balance.formatted(.currency(code: "EUR")))
+                                .font(.system(.subheadline, design: .monospaced))
+                                .foregroundStyle(account.balance < 0 ? Color("negativeColor") : Color("textPrimary"))
+                        }
+                    }
+
+                    if accounts.count > 3 {
+                        Text("in še \(accounts.count - 3)")
+                            .font(.caption)
+                            .foregroundStyle(Color("textSecondary"))
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .cardStyle()
+        }
+        .buttonStyle(.plain)
     }
 
     private var heroCard: some View {

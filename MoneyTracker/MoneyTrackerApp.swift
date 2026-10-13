@@ -20,6 +20,8 @@ struct MoneyTrackerApp: App {
             Subcategory.self,
             Investment.self,
             InvestmentTrade.self,
+            Account.self,
+            AccountTransfer.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         
