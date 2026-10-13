@@ -9,12 +9,12 @@ import SwiftUI
 
 struct SavingsView: View {
     enum Mode: String, CaseIterable {
-        case goals = "Cilji"
         case investments = "Naložbe"
+        case goals = "Cilji"
     }
 
-    @State private var mode: Mode = .goals
-
+    @State private var mode: Mode = .investments
+    
     var body: some View {
         VStack(spacing: 0) {
             ScreenHeader(title: "Varčevanje")

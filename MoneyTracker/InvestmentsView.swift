@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import Charts
 
 struct InvestmentsView: View {
     @Environment(\.modelContext) private var modelContext
@@ -8,6 +9,8 @@ struct InvestmentsView: View {
     @State private var showingAddTrade = false
     @State private var detailTarget: Investment? = nil
     @State private var refreshFailed = false
+    @State private var historyRange: PriceRange = .year
+    @State private var historyPoints: [PortfolioPoint] = []
 
     private var rates: [String: Decimal] { FXStore.decode(ratesRaw) }
 
@@ -77,12 +80,46 @@ struct InvestmentsView: View {
         .task {
             await refresh()
         }
+        .task(id: historyKey) {
+            await loadHistory()
+        }
         .sheet(isPresented: $showingAddTrade) {
             AddTradeView()
         }
         .sheet(item: $detailTarget) { investment in
             InvestmentDetailView(investment: investment)
         }
+    }
+
+    private var historyKey: String {
+        let tradeCount = investments.reduce(0) { $0 + ($1.trades?.count ?? 0) }
+        return "\(historyRange.rawValue)-\(investments.count)-\(tradeCount)-\(ratesRaw)"
+    }
+
+    private var historyColor: Color {
+        guard let first = historyPoints.first?.value, let last = historyPoints.last?.value else {
+            return Color.accentColor
+        }
+        return last >= first ? Color("positiveColor") : Color("negativeColor")
+    }
+
+    private func loadHistory() async {
+        let inputs = investments.map { investment in
+            HoldingInput(
+                symbol: investment.symbol,
+                currency: investment.currency,
+                trades: (investment.trades ?? []).map { trade in
+                    (date: trade.date, quantity: trade.isBuy ? trade.quantity : -trade.quantity)
+                }
+            )
+        }
+        guard !inputs.isEmpty else {
+            historyPoints = []
+            return
+        }
+        let points = await PortfolioHistory.build(holdings: inputs, range: historyRange, rates: rates)
+        if Task.isCancelled { return }
+        historyPoints = points
     }
 
     private var portfolioCard: some View {
@@ -103,6 +140,32 @@ struct InvestmentsView: View {
                     .font(.caption)
                     .foregroundStyle(Color("textSecondary"))
             }
+
+            if historyPoints.count > 1 {
+                Chart(historyPoints) { point in
+                    AreaMark(
+                        x: .value("Datum", point.date),
+                        y: .value("Vrednost", point.value)
+                    )
+                    .foregroundStyle(historyColor.opacity(0.15))
+                    LineMark(
+                        x: .value("Datum", point.date),
+                        y: .value("Vrednost", point.value)
+                    )
+                    .foregroundStyle(historyColor)
+                }
+                .chartYScale(domain: .automatic(includesZero: false))
+                .chartXAxis(.hidden)
+                .chartYAxis(.hidden)
+                .frame(height: 90)
+            }
+
+            Picker("Obdobje", selection: $historyRange) {
+                ForEach(PriceRange.allCases, id: \.self) { range in
+                    Text(range.rawValue).tag(range)
+                }
+            }
+            .pickerStyle(.segmented)
 
             if totalValue > 0 {
                 GeometryReader { geometry in

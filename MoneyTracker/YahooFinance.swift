@@ -32,6 +32,53 @@ private struct SearchResponse: Decodable {
     let quotes: [Item]
 }
 
+struct PricePoint: Identifiable {
+    let date: Date
+    let close: Double
+    var id: Date { date }
+}
+
+enum PriceRange: String, CaseIterable {
+    case month = "1M"
+    case sixMonths = "6M"
+    case year = "1L"
+    case fiveYears = "5L"
+
+    var yahooRange: String {
+        switch self {
+        case .month: return "1mo"
+        case .sixMonths: return "6mo"
+        case .year: return "1y"
+        case .fiveYears: return "5y"
+        }
+    }
+
+    var yahooInterval: String {
+        self == .fiveYears ? "1wk" : "1d"
+    }
+}
+
+private struct HistoryResponse: Decodable {
+    struct Chart: Decodable {
+        struct Result: Decodable {
+            struct Meta: Decodable {
+                let currency: String?
+            }
+            struct Indicators: Decodable {
+                struct Quote: Decodable {
+                    let close: [Double?]?
+                }
+                let quote: [Quote]
+            }
+            let meta: Meta
+            let timestamp: [Int]?
+            let indicators: Indicators
+        }
+        let result: [Result]?
+    }
+    let chart: Chart
+}
+
 private struct ChartResponse: Decodable {
     struct Chart: Decodable {
         struct Result: Decodable {
@@ -117,6 +164,29 @@ enum YahooFinance {
             currency = "GBP"
         }
         return YahooQuote(price: price, previousClose: previous, currency: currency)
+    }
+
+    static func history(symbol: String, range: PriceRange) async throws -> [PricePoint] {
+        guard let encoded = symbol.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else {
+            throw YahooError.badResponse
+        }
+        let url = "https://query1.finance.yahoo.com/v8/finance/chart/\(encoded)?interval=\(range.yahooInterval)&range=\(range.yahooRange)"
+        let data = try await fetch(url)
+        let response = try JSONDecoder().decode(HistoryResponse.self, from: data)
+        guard let result = response.chart.result?.first,
+              let timestamps = result.timestamp,
+              let closes = result.indicators.quote.first?.close else {
+            throw YahooError.noData
+        }
+
+        let divisor: Double = result.meta.currency == "GBp" ? 100 : 1
+        var points: [PricePoint] = []
+        for (index, timestamp) in timestamps.enumerated() where index < closes.count {
+            if let close = closes[index] {
+                points.append(PricePoint(date: Date(timeIntervalSince1970: TimeInterval(timestamp)), close: close / divisor))
+            }
+        }
+        return points
     }
 
     static func eurRate(for currency: String) async throws -> Decimal {

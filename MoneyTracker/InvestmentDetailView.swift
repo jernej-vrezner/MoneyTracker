@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import Charts
 
 struct InvestmentDetailView: View {
     let investment: Investment
@@ -16,6 +17,9 @@ struct InvestmentDetailView: View {
     @AppStorage("fxRates") private var ratesRaw = ""
     @State private var showingAddTrade = false
     @State private var tradeToEdit: InvestmentTrade? = nil
+    @State private var priceRange: PriceRange = .year
+    @State private var pricePoints: [PricePoint] = []
+    @State private var historyFailed = false
 
     private var summary: HoldingSummary {
         investment.summary(eurRate: FXStore.decode(ratesRaw)[investment.currency] ?? 0)
@@ -45,9 +49,83 @@ struct InvestmentDetailView: View {
         }
     }
 
+    private var rangeChangePercent: Double? {
+        guard let first = pricePoints.first?.close, let last = pricePoints.last?.close, first > 0 else { return nil }
+        return (last - first) / first * 100
+    }
+
+    private var chartColor: Color {
+        (rangeChangePercent ?? 0) >= 0 ? Color("positiveColor") : Color("negativeColor")
+    }
+
+    private func loadHistory() async {
+        do {
+            pricePoints = try await YahooFinance.history(symbol: investment.symbol, range: priceRange)
+            historyFailed = false
+        } catch {
+            if Task.isCancelled { return }
+            pricePoints = []
+            historyFailed = true
+        }
+    }
+
+    private var priceChartSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("CENA (\(investment.currency))")
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundStyle(Color("textSecondary"))
+                Spacer()
+                if let change = rangeChangePercent {
+                    Text((change >= 0 ? "+" : "") + change.formatted(.number.precision(.fractionLength(1))) + " %")
+                        .font(.system(.caption, design: .monospaced).weight(.semibold))
+                        .foregroundStyle(chartColor)
+                }
+            }
+
+            if pricePoints.isEmpty {
+                Text(historyFailed ? "Zgodovine cen ni mogoče naložiti." : "Nalagam ...")
+                    .font(.caption)
+                    .foregroundStyle(Color("textSecondary"))
+                    .frame(maxWidth: .infinity, minHeight: 140)
+            } else {
+                Chart(pricePoints) { point in
+                    AreaMark(
+                        x: .value("Datum", point.date),
+                        y: .value("Cena", point.close)
+                    )
+                    .foregroundStyle(chartColor.opacity(0.12))
+                    LineMark(
+                        x: .value("Datum", point.date),
+                        y: .value("Cena", point.close)
+                    )
+                    .foregroundStyle(chartColor)
+                }
+                .chartYScale(domain: .automatic(includesZero: false))
+                .chartXAxis {
+                    AxisMarks(values: .automatic(desiredCount: 3))
+                }
+                .frame(height: 160)
+            }
+
+            Picker("Obdobje", selection: $priceRange) {
+                ForEach(PriceRange.allCases, id: \.self) { range in
+                    Text(range.rawValue).tag(range)
+                }
+            }
+            .pickerStyle(.segmented)
+        }
+        .padding(.vertical, 6)
+    }
+
     var body: some View {
         NavigationStack {
             List {
+                Section {
+                    priceChartSection
+                }
+                .listRowBackground(Color("cardBackground"))
+
                 Section(header: Text(investment.symbol).font(.system(.caption2, design: .monospaced))) {
                     statRow("Količina", summary.quantity.formatted())
                     statRow("Trenutna cena", euro(summary.priceEUR))
@@ -110,6 +188,9 @@ struct InvestmentDetailView: View {
             }
             .scrollContentBackground(.hidden)
             .background(Color("appBackground"))
+            .task(id: priceRange) {
+                await loadHistory()
+            }
             .navigationTitle(investment.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
