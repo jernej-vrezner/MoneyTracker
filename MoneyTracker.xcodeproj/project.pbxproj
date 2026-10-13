@@ -6,7 +6,20 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		195A3371307EA65E0095FB58 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 195A3370307EA65E0095FB58 /* WidgetKit.framework */; };
+		195A3373307EA65E0095FB58 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 195A3372307EA65E0095FB58 /* SwiftUI.framework */; };
+		195A337E307EA6600095FB58 /* MoneyTrackerWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 195A336E307EA65E0095FB58 /* MoneyTrackerWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
+		195A337C307EA6600095FB58 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1967E80030515CA100AFE1EF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 195A336D307EA65E0095FB58;
+			remoteInfo = MoneyTrackerWidgetExtension;
+		};
 		1967E81830515CA200AFE1EF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 1967E80030515CA100AFE1EF /* Project object */;
@@ -23,15 +36,61 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		195A3383307EA6600095FB58 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				195A337E307EA6600095FB58 /* MoneyTrackerWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		195A336E307EA65E0095FB58 /* MoneyTrackerWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MoneyTrackerWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		195A3370307EA65E0095FB58 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		195A3372307EA65E0095FB58 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		195A3385307EA8A50095FB58 /* MoneyTrackerWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MoneyTrackerWidgetExtension.entitlements; sourceTree = "<group>"; };
 		1967E80830515CA100AFE1EF /* MoneyTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MoneyTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1967E81730515CA200AFE1EF /* MoneyTrackerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MoneyTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1967E82130515CA200AFE1EF /* MoneyTrackerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MoneyTrackerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		195A337F307EA6600095FB58 /* Exceptions for "MoneyTrackerWidget" folder in "MoneyTrackerWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 195A336D307EA65E0095FB58 /* MoneyTrackerWidgetExtension */;
+		};
+		195A338A307EA9D90095FB58 /* Exceptions for "MoneyTracker" folder in "MoneyTrackerWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				WidgetSnapshot.swift,
+			);
+			target = 195A336D307EA65E0095FB58 /* MoneyTrackerWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		195A3374307EA65E0095FB58 /* MoneyTrackerWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				195A337F307EA6600095FB58 /* Exceptions for "MoneyTrackerWidget" folder in "MoneyTrackerWidgetExtension" target */,
+			);
+			path = MoneyTrackerWidget;
+			sourceTree = "<group>";
+		};
 		1967E80A30515CA100AFE1EF /* MoneyTracker */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				195A338A307EA9D90095FB58 /* Exceptions for "MoneyTracker" folder in "MoneyTrackerWidgetExtension" target */,
+			);
 			path = MoneyTracker;
 			sourceTree = "<group>";
 		};
@@ -48,6 +107,15 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		195A336B307EA65E0095FB58 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				195A3373307EA65E0095FB58 /* SwiftUI.framework in Frameworks */,
+				195A3371307EA65E0095FB58 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		1967E80530515CA100AFE1EF /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -72,12 +140,24 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		195A336F307EA65E0095FB58 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				195A3370307EA65E0095FB58 /* WidgetKit.framework */,
+				195A3372307EA65E0095FB58 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		1967E7FF30515CA100AFE1EF = {
 			isa = PBXGroup;
 			children = (
+				195A3385307EA8A50095FB58 /* MoneyTrackerWidgetExtension.entitlements */,
 				1967E80A30515CA100AFE1EF /* MoneyTracker */,
 				1967E81A30515CA200AFE1EF /* MoneyTrackerTests */,
 				1967E82430515CA200AFE1EF /* MoneyTrackerUITests */,
+				195A3374307EA65E0095FB58 /* MoneyTrackerWidget */,
+				195A336F307EA65E0095FB58 /* Frameworks */,
 				1967E80930515CA100AFE1EF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -88,6 +168,7 @@
 				1967E80830515CA100AFE1EF /* MoneyTracker.app */,
 				1967E81730515CA200AFE1EF /* MoneyTrackerTests.xctest */,
 				1967E82130515CA200AFE1EF /* MoneyTrackerUITests.xctest */,
+				195A336E307EA65E0095FB58 /* MoneyTrackerWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,6 +176,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		195A336D307EA65E0095FB58 /* MoneyTrackerWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 195A3380307EA6600095FB58 /* Build configuration list for PBXNativeTarget "MoneyTrackerWidgetExtension" */;
+			buildPhases = (
+				195A336A307EA65E0095FB58 /* Sources */,
+				195A336B307EA65E0095FB58 /* Frameworks */,
+				195A336C307EA65E0095FB58 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				195A3374307EA65E0095FB58 /* MoneyTrackerWidget */,
+			);
+			name = MoneyTrackerWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = MoneyTrackerWidgetExtension;
+			productReference = 195A336E307EA65E0095FB58 /* MoneyTrackerWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		1967E80730515CA100AFE1EF /* MoneyTracker */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1967E82B30515CA200AFE1EF /* Build configuration list for PBXNativeTarget "MoneyTracker" */;
@@ -102,10 +205,12 @@
 				1967E80430515CA100AFE1EF /* Sources */,
 				1967E80530515CA100AFE1EF /* Frameworks */,
 				1967E80630515CA100AFE1EF /* Resources */,
+				195A3383307EA6600095FB58 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				195A337D307EA6600095FB58 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				1967E80A30515CA100AFE1EF /* MoneyTracker */,
@@ -170,9 +275,12 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2660;
+				LastSwiftUpdateCheck = 2700;
 				LastUpgradeCheck = 2700;
 				TargetAttributes = {
+					195A336D307EA65E0095FB58 = {
+						CreatedOnToolsVersion = 27.0;
+					};
 					1967E80730515CA100AFE1EF = {
 						CreatedOnToolsVersion = 26.6;
 					};
@@ -203,11 +311,19 @@
 				1967E80730515CA100AFE1EF /* MoneyTracker */,
 				1967E81630515CA200AFE1EF /* MoneyTrackerTests */,
 				1967E82030515CA200AFE1EF /* MoneyTrackerUITests */,
+				195A336D307EA65E0095FB58 /* MoneyTrackerWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		195A336C307EA65E0095FB58 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		1967E80630515CA100AFE1EF /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -232,6 +348,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		195A336A307EA65E0095FB58 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		1967E80430515CA100AFE1EF /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -256,6 +379,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		195A337D307EA6600095FB58 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 195A336D307EA65E0095FB58 /* MoneyTrackerWidgetExtension */;
+			targetProxy = 195A337C307EA6600095FB58 /* PBXContainerItemProxy */;
+		};
 		1967E81930515CA200AFE1EF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 1967E80730515CA100AFE1EF /* MoneyTracker */;
@@ -269,6 +397,75 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		195A3381307EA6600095FB58 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = MoneyTrackerWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8BX788P3Y8;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MoneyTrackerWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MoneyTrackerWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = name.jernejvrezner.MoneyTracker.MoneyTrackerWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		195A3382307EA6600095FB58 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = MoneyTrackerWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8BX788P3Y8;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MoneyTrackerWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MoneyTrackerWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = name.jernejvrezner.MoneyTracker.MoneyTrackerWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		1967E82930515CA200AFE1EF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -394,6 +591,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MoneyTracker/MoneyTracker.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
@@ -439,6 +637,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MoneyTracker/MoneyTracker.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
@@ -588,6 +787,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		195A3380307EA6600095FB58 /* Build configuration list for PBXNativeTarget "MoneyTrackerWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				195A3381307EA6600095FB58 /* Debug */,
+				195A3382307EA6600095FB58 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		1967E80330515CA100AFE1EF /* Build configuration list for PBXProject "MoneyTracker" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

@@ -11,6 +11,8 @@ import SwiftUI
 @main
 struct MoneyTrackerWidgetBundle: WidgetBundle {
     var body: some Widget {
-        MoneyTrackerWidget()
+        BudgetWidget()
+        ProjectionWidget()
+        GoalsWidget()
     }
 }

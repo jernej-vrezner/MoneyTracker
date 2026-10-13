@@ -97,6 +97,7 @@ struct MoneyTrackerApp: App {
             .preferredColorScheme(preferredScheme)
             .onChange(of: scenePhase) { _, phase in
                 if phase == .background {
+                    WidgetSync.update(context: sharedModelContainer.mainContext)
                     let subscriptions = (try? sharedModelContainer.mainContext.fetch(FetchDescriptor<Subscription>())) ?? []
                     Task {
                         await Reminders.applySubscriptionReminders(enabled: subscriptionReminders, subscriptions: subscriptions)
