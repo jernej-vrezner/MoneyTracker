@@ -423,6 +423,7 @@ struct DashboardView: View {
                 let newTransaction = Transaction(amount: subscription.amount, date: Date(), type: .expense, note: noteText, category: subscription.category)
                 modelContext.insert(newTransaction)
                 newTransaction.subcategory = subscription.subcategory
+                newTransaction.account = subscription.account
                 subscription.lastChargedMonth = Date()
             }
         }

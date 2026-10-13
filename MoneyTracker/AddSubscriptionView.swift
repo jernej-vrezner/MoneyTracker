@@ -14,10 +14,12 @@ struct AddSubscriptionView: View {
     @State private var billingDay: Int = 1
     @State private var selectedCategory: Category? = nil
     @State private var selectedSubcategory: Subcategory? = nil
+    @State private var selectedAccount: Account? = nil
     @State private var note: String = ""
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query private var categories: [Category]
+    @Query(sort: \Account.createdAt) private var accounts: [Account]
 
     let subscriptionToEdit: Subscription?
 
@@ -29,6 +31,7 @@ struct AddSubscriptionView: View {
             _billingDay = State(initialValue: subscription.billingDay)
             _selectedCategory = State(initialValue: subscription.category)
             _selectedSubcategory = State(initialValue: subscription.subcategory)
+            _selectedAccount = State(initialValue: subscription.account)
             _note = State(initialValue: subscription.note)
         }
     }
@@ -75,6 +78,15 @@ struct AddSubscriptionView: View {
                 }
                 .listRowBackground(Color("cardBackground"))
 
+                if !accounts.isEmpty {
+                    Section(header: Text("RAČUN").font(.system(.caption2, design: .monospaced)).foregroundStyle(Color("textSecondary"))) {
+                        AccountPillPicker(accounts: accounts, selectedAccount: $selectedAccount)
+                            .padding(.vertical, 4)
+                    }
+                    .listRowBackground(Color("cardBackground"))
+                    .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+                }
+
                 Section(header: Text("KATEGORIJA").font(.system(.caption2, design: .monospaced)).foregroundStyle(Color("textSecondary"))) {
                     CategoryPillPicker(
                         categories: categories,
@@ -118,11 +130,13 @@ struct AddSubscriptionView: View {
             subscription.billingDay = billingDay
             subscription.category = selectedCategory
             subscription.subcategory = selectedSubcategory
+            subscription.account = selectedAccount
             subscription.note = note
         } else {
             let newSubscription = Subscription(name: trimmedName, amount: amount, billingDay: billingDay, category: selectedCategory)
             modelContext.insert(newSubscription)
             newSubscription.subcategory = selectedSubcategory
+            newSubscription.account = selectedAccount
             newSubscription.note = note
         }
         dismiss()

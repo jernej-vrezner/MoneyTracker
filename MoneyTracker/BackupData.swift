@@ -62,6 +62,7 @@ struct BackupData: Codable {
         var lastChargedMonth: Date
         var categoryID: Int?
         var subcategoryID: Int?
+        var accountID: Int?
     }
     
     struct InvestmentDTO: Codable {
@@ -186,7 +187,8 @@ struct BackupData: Codable {
                 note: s.note,
                 lastChargedMonth: s.lastChargedMonth,
                 categoryID: s.category.flatMap { categoryIDs[$0.persistentModelID] },
-                subcategoryID: s.subcategory.flatMap { subcategoryIDs[$0.persistentModelID] }
+                subcategoryID: s.subcategory.flatMap { subcategoryIDs[$0.persistentModelID] },
+                accountID: s.account.flatMap { accountIDs[$0.persistentModelID] }
             )
         }
         var investmentDTOs: [InvestmentDTO] = []
@@ -325,6 +327,7 @@ extension BackupData {
             )
             context.insert(subscription)
             subscription.subcategory = dto.subcategoryID.flatMap { subcategoryByID[$0] }
+            subscription.account = dto.accountID.flatMap { accountByID[$0] }
             subscription.note = dto.note
             subscription.lastChargedMonth = dto.lastChargedMonth
         }

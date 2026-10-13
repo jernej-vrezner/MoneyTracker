@@ -23,7 +23,7 @@ struct SubscriptionsView: View {
                     VStack(alignment: .leading) {
                         Text(subscription.name)
                             .foregroundStyle(Color("textPrimary"))
-                        Text("Dan obračuna: \(subscription.billingDay)")
+                        Text("Dan obračuna: \(subscription.billingDay)" + (subscription.account.map { " · " + $0.name } ?? ""))
                             .font(.caption)
                             .foregroundStyle(Color("textSecondary"))
                     }
