@@ -10,6 +10,12 @@ import SwiftData
 import Charts
 
 struct DashboardView: View {
+    @Query(sort: \Goal.deadline) private var goals: [Goal]
+    @Query private var investments: [Investment]
+    @AppStorage("fxRates") private var fxRatesRaw = ""
+    @State private var visibleGoalID: PersistentIdentifier? = nil
+    @State private var investmentRange: PriceRange = .sixMonths
+    @State private var investmentPoints: [PortfolioPoint] = []
     @State private var showingBudgetEdit = false
     @State private var showingBudgetInfo = false
     @State private var showingDashboardEdit = false
@@ -136,6 +142,8 @@ struct DashboardView: View {
         case .projection: projectionCard
         case .categories: categoriesCard
         case .recent: recentCard
+        case .goals: goalsCard
+        case .investments: investmentsCard
         }
     }
 
@@ -192,6 +200,185 @@ struct DashboardView: View {
             .cardStyle()
         }
         .buttonStyle(.plain)
+    }
+    private var portfolioSummaries: [HoldingSummary] {
+        let rates = FXStore.decode(fxRatesRaw)
+        return investments
+            .map { $0.summary(eurRate: rates[$0.currency] ?? 0) }
+            .filter { $0.quantity > 0 }
+    }
+
+    private var portfolioValue: Decimal {
+        portfolioSummaries.reduce(Decimal(0)) { $0 + $1.value }
+    }
+
+    private var portfolioDayChange: Decimal {
+        portfolioSummaries.reduce(Decimal(0)) { $0 + $1.dayChangeEUR }
+    }
+
+    private func goalPage(_ goal: Goal) -> some View {
+        HStack(alignment: .top, spacing: 16) {
+            CircularProgressRing(progress: goal.progress, color: Color.accentColor)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(goal.name)
+                    .font(.headline)
+                    .foregroundStyle(Color("textPrimary"))
+                    .lineLimit(1)
+                Text(goal.savedAmount.formatted(.currency(code: "EUR")))
+                    .font(.system(.title3, design: .monospaced).weight(.bold))
+                    .foregroundStyle(Color("textPrimary"))
+                Text("od \(goal.targetAmount.formatted(.currency(code: "EUR"))) · ostane \(goal.remaining.formatted(.currency(code: "EUR")))")
+                    .font(.caption)
+                    .foregroundStyle(Color("textSecondary"))
+                Text("mesečno \(goal.monthlyNeeded.formatted(.currency(code: "EUR"))) · rok \(goal.deadline.formatted(.dateTime.month(.abbreviated).year()))")
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundStyle(Color("textSecondary"))
+            }
+
+            Spacer(minLength: 0)
+        }
+    }
+
+    private var goalsCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("CILJI")
+                .font(.system(.caption2, design: .monospaced))
+                .foregroundStyle(Color("textSecondary"))
+
+            if goals.isEmpty {
+                Text("Še nimaš ciljev. Dodaj jih v zavihku Varčevanje.")
+                    .font(.caption)
+                    .foregroundStyle(Color("textSecondary"))
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHStack(spacing: 0) {
+                        ForEach(goals) { goal in
+                            goalPage(goal)
+                                .containerRelativeFrame(.horizontal)
+                                .id(goal.persistentModelID)
+                        }
+                    }
+                    .scrollTargetLayout()
+                }
+                .scrollTargetBehavior(.paging)
+                .scrollPosition(id: $visibleGoalID)
+
+                if goals.count > 1 {
+                    HStack(spacing: 6) {
+                        ForEach(goals) { goal in
+                            Circle()
+                                .fill(goal.persistentModelID == (visibleGoalID ?? goals.first?.persistentModelID)
+                                      ? Color.accentColor
+                                      : Color("textSecondary").opacity(0.3))
+                                .frame(width: 6, height: 6)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .cardStyle()
+    }
+
+    private var portfolioDayChangePercent: Double {
+        let previous = portfolioValue - portfolioDayChange
+        guard previous > 0 else { return 0 }
+        return Double(truncating: (portfolioDayChange / previous) as NSNumber) * 100
+    }
+
+    private var investmentHistoryKey: String {
+        let tradeCount = investments.reduce(0) { $0 + ($1.trades?.count ?? 0) }
+        return "\(investmentRange.rawValue)-\(investments.count)-\(tradeCount)-\(fxRatesRaw)"
+    }
+
+    private var investmentChartColor: Color {
+        guard let first = investmentPoints.first?.value, let last = investmentPoints.last?.value else {
+            return Color.accentColor
+        }
+        return last >= first ? Color("positiveColor") : Color("negativeColor")
+    }
+
+    private func loadInvestmentHistory() async {
+        let inputs = investments.map { investment in
+            HoldingInput(
+                symbol: investment.symbol,
+                currency: investment.currency,
+                trades: (investment.trades ?? []).map { trade in
+                    (date: trade.date, quantity: trade.isBuy ? trade.quantity : -trade.quantity)
+                }
+            )
+        }
+        guard !inputs.isEmpty else {
+            investmentPoints = []
+            return
+        }
+        let points = await PortfolioHistory.build(
+            holdings: inputs,
+            range: investmentRange,
+            rates: FXStore.decode(fxRatesRaw)
+        )
+        if Task.isCancelled { return }
+        investmentPoints = points
+    }
+
+    private var investmentsCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("NALOŽBE")
+                .font(.system(.caption2, design: .monospaced))
+                .foregroundStyle(Color("textSecondary"))
+
+            if investments.isEmpty {
+                Text("Še nimaš naložb. Dodaj jih v zavihku Varčevanje.")
+                    .font(.caption)
+                    .foregroundStyle(Color("textSecondary"))
+            } else {
+                Text(portfolioValue.formatted(.currency(code: "EUR")))
+                    .font(.system(.title, design: .monospaced).weight(.bold))
+                    .foregroundStyle(Color("textPrimary"))
+
+                HStack(spacing: 6) {
+                    Text((portfolioDayChange >= 0 ? "+" : "") + portfolioDayChange.formatted(.currency(code: "EUR")))
+                        .font(.system(.subheadline, design: .monospaced).weight(.semibold))
+                        .foregroundStyle(portfolioDayChange >= 0 ? Color("positiveColor") : Color("negativeColor"))
+                    Text("danes · " + (portfolioDayChangePercent >= 0 ? "+" : "") + portfolioDayChangePercent.formatted(.number.precision(.fractionLength(1))) + " %")
+                        .font(.caption)
+                        .foregroundStyle(Color("textSecondary"))
+                }
+
+                if investmentPoints.count > 1 {
+                    Chart(investmentPoints) { point in
+                        AreaMark(
+                            x: .value("Datum", point.date),
+                            y: .value("Vrednost", point.value)
+                        )
+                        .foregroundStyle(investmentChartColor.opacity(0.15))
+                        LineMark(
+                            x: .value("Datum", point.date),
+                            y: .value("Vrednost", point.value)
+                        )
+                        .foregroundStyle(investmentChartColor)
+                    }
+                    .chartYScale(domain: .automatic(includesZero: false))
+                    .chartXAxis(.hidden)
+                    .chartYAxis(.hidden)
+                    .frame(height: 80)
+                }
+
+                Picker("Obdobje", selection: $investmentRange) {
+                    ForEach(PriceRange.allCases, id: \.self) { range in
+                        Text(range.rawValue).tag(range)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .cardStyle()
+        .task(id: investmentHistoryKey) {
+            await loadInvestmentHistory()
+        }
     }
 
     private var heroCard: some View {

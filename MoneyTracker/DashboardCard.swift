@@ -14,6 +14,8 @@ enum DashboardCard: String, CaseIterable, Identifiable {
     case projection
     case categories
     case recent
+    case goals
+    case investments
 
     var id: String { rawValue }
 
@@ -25,6 +27,8 @@ enum DashboardCard: String, CaseIterable, Identifiable {
         case .projection: return "Projekcija"
         case .categories: return "Budget po kategorijah"
         case .recent: return "Zadnje transakcije"
+        case .goals: return "Cilji"
+        case .investments: return "Naložbe"
         }
     }
 

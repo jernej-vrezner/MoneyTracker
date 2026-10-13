@@ -23,6 +23,7 @@ struct CircularProgressRing: View {
                 .font(.system(.caption, design: .monospaced).weight(.bold))
                 .foregroundStyle(Color("textPrimary"))
         }
+        .padding(4)
         .frame(width: 64, height: 64)
     }
 }

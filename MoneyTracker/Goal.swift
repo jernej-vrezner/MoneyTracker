@@ -25,7 +25,22 @@ final class Goal{
         self.deadline = deadline
     }
 }
-    
+
+extension Goal {
+    var progress: Double {
+        guard targetAmount > 0 else { return 0 }
+        return Double(truncating: (savedAmount / targetAmount) as NSNumber)
+    }
+
+    var remaining: Decimal {
+        max(targetAmount - savedAmount, 0)
+    }
+
+    var monthlyNeeded: Decimal {
+        let months = Calendar.current.dateComponents([.month], from: Date(), to: deadline).month ?? 0
+        return remaining / Decimal(max(months, 1))
+    }
+}
     
 
 
