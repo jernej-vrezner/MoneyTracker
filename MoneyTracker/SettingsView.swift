@@ -37,6 +37,7 @@ struct SettingsView: View {
     @AppStorage("dailyReminder") private var dailyReminder = false
     @AppStorage("dailyReminderMinutes") private var dailyMinutes = 1200
     @AppStorage("subscriptionReminders") private var subscriptionReminders = false
+    @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = true
     @State private var notificationsDenied = false
 
     private var reminderTime: Binding<Date> {
@@ -166,6 +167,15 @@ struct SettingsView: View {
                         showingImporter = true
                     } label: {
                         Label("Obnovi iz kopije (JSON)", systemImage: "arrow.counterclockwise")
+                    }
+                }
+                .listRowBackground(Color("cardBackground"))
+                Section {
+                    Button("Pokaži uvod znova") {
+                        dismiss()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            hasSeenOnboarding = false
+                        }
                     }
                 }
                 .listRowBackground(Color("cardBackground"))

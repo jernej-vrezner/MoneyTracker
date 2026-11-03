@@ -37,6 +37,7 @@ struct MoneyTrackerApp: App {
     @State private var quickAddCategory: String? = nil
     @AppStorage("appearance") private var appearance = "system"
     @AppStorage("subscriptionReminders") private var subscriptionReminders = false
+    @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
     @Environment(\.scenePhase) private var scenePhase
 
     private var preferredScheme: ColorScheme? {
@@ -97,6 +98,14 @@ struct MoneyTrackerApp: App {
             }
             .sheet(isPresented: $showingAddTransaction) {
                 AddTransactionView(initialType: quickAddType, initialCategoryName: quickAddCategory)
+            }
+            .fullScreenCover(isPresented: Binding(
+                get: { !hasSeenOnboarding },
+                set: { if !$0 { hasSeenOnboarding = true } }
+            )) {
+                OnboardingView {
+                    hasSeenOnboarding = true
+                }
             }
             .preferredColorScheme(preferredScheme)
             .onOpenURL { url in
