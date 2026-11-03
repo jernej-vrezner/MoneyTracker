@@ -33,6 +33,8 @@ struct MoneyTrackerApp: App {
     }()
     
     @State private var showingAddTransaction = false
+    @State private var quickAddType: TransactioType = .expense
+    @State private var quickAddCategory: String? = nil
     @AppStorage("appearance") private var appearance = "system"
     @AppStorage("subscriptionReminders") private var subscriptionReminders = false
     @Environment(\.scenePhase) private var scenePhase
@@ -76,6 +78,8 @@ struct MoneyTrackerApp: App {
                     HStack {
                         Spacer()
                         Button {
+                            quickAddType = .expense
+                            quickAddCategory = nil
                             showingAddTransaction = true
                         } label: {
                             Image(systemName: "plus")
@@ -92,9 +96,22 @@ struct MoneyTrackerApp: App {
                 }
             }
             .sheet(isPresented: $showingAddTransaction) {
-                AddTransactionView()
+                AddTransactionView(initialType: quickAddType, initialCategoryName: quickAddCategory)
             }
             .preferredColorScheme(preferredScheme)
+            .onOpenURL { url in
+                guard url.scheme == "moneytracker", url.host == "add" else { return }
+                let type = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+                    .queryItems?
+                    .first(where: { $0.name == "type" })?
+                    .value
+                quickAddType = (type == "income") ? .income : .expense
+                quickAddCategory = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+                    .queryItems?
+                    .first(where: { $0.name == "category" })?
+                    .value
+                showingAddTransaction = true
+            }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .background {
                     WidgetSync.update(context: sharedModelContainer.mainContext)

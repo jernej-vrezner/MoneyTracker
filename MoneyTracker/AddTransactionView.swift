@@ -23,9 +23,12 @@ struct AddTransactionView: View {
     @AppStorage("lastAccountStamp") private var lastAccountStamp: Double = 0
 
     let transactionToEdit: Transaction?
+    let initialCategoryName: String?
 
-    init(transaction: Transaction? = nil) {
+    init(transaction: Transaction? = nil, initialType: TransactioType = .expense, initialCategoryName: String? = nil) {
         self.transactionToEdit = transaction
+        self.initialCategoryName = initialCategoryName
+        _type = State(initialValue: initialType)
         if let transaction {
             _date = State(initialValue: transaction.date)
             _type = State(initialValue: transaction.type)
@@ -92,6 +95,9 @@ struct AddTransactionView: View {
             .navigationTitle(transactionToEdit == nil ? "Nova transakcija" : "Uredi transakcijo")
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
+                if transactionToEdit == nil, let name = initialCategoryName, selectedCategory == nil {
+                    selectedCategory = categories.first { $0.name == name }
+                }
                 if transactionToEdit == nil && selectedAccount == nil {
                     selectedAccount = accounts.first { $0.createdAt.timeIntervalSince1970 == lastAccountStamp } ?? accounts.first
                 }

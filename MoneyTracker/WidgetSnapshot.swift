@@ -11,6 +11,7 @@ struct GoalSnapshot: Codable, Identifiable {
     var name: String
     var saved: Double
     var target: Double
+    var deadline: Date
 
     var id: String { name }
 
@@ -20,10 +21,25 @@ struct GoalSnapshot: Codable, Identifiable {
     }
 }
 
+struct CategorySnapshot: Codable, Identifiable {
+    var name: String
+    var icon: String
+    var colorName: String
+    var spent: Double
+    var limit: Double
+
+    var id: String { name }
+}
+
 struct WidgetSnapshot: Codable {
     var budgetSpent: Double
     var budgetLimit: Double
     var projected: Double
+    var dayOfMonth: Int
+    var daysInMonth: Int
+    var dailySpend: [Double]
+    var todaySpent: Double
+    var categories: [CategorySnapshot]
     var goals: [GoalSnapshot]
     var updatedAt: Date
 
@@ -31,7 +47,18 @@ struct WidgetSnapshot: Codable {
     static let storageKey = "widgetSnapshot"
 
     static var empty: WidgetSnapshot {
-        WidgetSnapshot(budgetSpent: 0, budgetLimit: 0, projected: 0, goals: [], updatedAt: Date())
+        WidgetSnapshot(
+            budgetSpent: 0,
+            budgetLimit: 0,
+            projected: 0,
+            dayOfMonth: 1,
+            daysInMonth: 30,
+            dailySpend: [],
+            todaySpent: 0,
+            categories: [],
+            goals: [],
+            updatedAt: Date()
+        )
     }
 
     static func load() -> WidgetSnapshot {

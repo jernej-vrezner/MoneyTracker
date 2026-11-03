@@ -14,5 +14,6 @@ struct MoneyTrackerWidgetBundle: WidgetBundle {
         BudgetWidget()
         ProjectionWidget()
         GoalsWidget()
+        QuickAddWidget()
     }
 }
